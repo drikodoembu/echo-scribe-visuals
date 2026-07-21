@@ -23,6 +23,7 @@ import { Route as AuthenticatedAppPublicacaoRouteImport } from './routes/_authen
 import { Route as AuthenticatedAppMusicasRouteImport } from './routes/_authenticated/app.musicas'
 import { Route as AuthenticatedAppMontagemRouteImport } from './routes/_authenticated/app.montagem'
 import { Route as AuthenticatedAppConfiguracoesRouteImport } from './routes/_authenticated/app.configuracoes'
+import { Route as AuthenticatedAppAudioRouteImport } from './routes/_authenticated/app.audio'
 import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
 import { Route as AuthenticatedAppAgendaRouteImport } from './routes/_authenticated/app.agenda'
 
@@ -99,6 +100,11 @@ const AuthenticatedAppConfiguracoesRoute =
     path: '/configuracoes',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppAudioRoute = AuthenticatedAppAudioRouteImport.update({
+  id: '/audio',
+  path: '/audio',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppAnalyticsRoute =
   AuthenticatedAppAnalyticsRouteImport.update({
     id: '/analytics',
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/app/agenda': typeof AuthenticatedAppAgendaRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
+  '/app/audio': typeof AuthenticatedAppAudioRoute
   '/app/configuracoes': typeof AuthenticatedAppConfiguracoesRoute
   '/app/montagem': typeof AuthenticatedAppMontagemRoute
   '/app/musicas': typeof AuthenticatedAppMusicasRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/app/agenda': typeof AuthenticatedAppAgendaRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
+  '/app/audio': typeof AuthenticatedAppAudioRoute
   '/app/configuracoes': typeof AuthenticatedAppConfiguracoesRoute
   '/app/montagem': typeof AuthenticatedAppMontagemRoute
   '/app/musicas': typeof AuthenticatedAppMusicasRoute
@@ -154,6 +162,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/app/agenda': typeof AuthenticatedAppAgendaRoute
   '/_authenticated/app/analytics': typeof AuthenticatedAppAnalyticsRoute
+  '/_authenticated/app/audio': typeof AuthenticatedAppAudioRoute
   '/_authenticated/app/configuracoes': typeof AuthenticatedAppConfiguracoesRoute
   '/_authenticated/app/montagem': typeof AuthenticatedAppMontagemRoute
   '/_authenticated/app/musicas': typeof AuthenticatedAppMusicasRoute
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/app/agenda'
     | '/app/analytics'
+    | '/app/audio'
     | '/app/configuracoes'
     | '/app/montagem'
     | '/app/musicas'
@@ -189,6 +199,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/app/agenda'
     | '/app/analytics'
+    | '/app/audio'
     | '/app/configuracoes'
     | '/app/montagem'
     | '/app/musicas'
@@ -207,6 +218,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/_authenticated/app/agenda'
     | '/_authenticated/app/analytics'
+    | '/_authenticated/app/audio'
     | '/_authenticated/app/configuracoes'
     | '/_authenticated/app/montagem'
     | '/_authenticated/app/musicas'
@@ -326,6 +338,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppConfiguracoesRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/audio': {
+      id: '/_authenticated/app/audio'
+      path: '/audio'
+      fullPath: '/app/audio'
+      preLoaderRoute: typeof AuthenticatedAppAudioRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/analytics': {
       id: '/_authenticated/app/analytics'
       path: '/analytics'
@@ -346,6 +365,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAgendaRoute: typeof AuthenticatedAppAgendaRoute
   AuthenticatedAppAnalyticsRoute: typeof AuthenticatedAppAnalyticsRoute
+  AuthenticatedAppAudioRoute: typeof AuthenticatedAppAudioRoute
   AuthenticatedAppConfiguracoesRoute: typeof AuthenticatedAppConfiguracoesRoute
   AuthenticatedAppMontagemRoute: typeof AuthenticatedAppMontagemRoute
   AuthenticatedAppMusicasRoute: typeof AuthenticatedAppMusicasRoute
@@ -357,6 +377,7 @@ interface AuthenticatedAppRouteChildren {
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppAgendaRoute: AuthenticatedAppAgendaRoute,
   AuthenticatedAppAnalyticsRoute: AuthenticatedAppAnalyticsRoute,
+  AuthenticatedAppAudioRoute: AuthenticatedAppAudioRoute,
   AuthenticatedAppConfiguracoesRoute: AuthenticatedAppConfiguracoesRoute,
   AuthenticatedAppMontagemRoute: AuthenticatedAppMontagemRoute,
   AuthenticatedAppMusicasRoute: AuthenticatedAppMusicasRoute,
