@@ -271,7 +271,7 @@ function RoteirosPage() {
         </div>
       </aside>
 
-      <section className="space-y-6">
+      <section className="mx-auto w-full max-w-3xl space-y-6">
         <header className="space-y-1">
           <h1 className="font-display text-4xl text-primary md:text-5xl">Roteiros</h1>
           <p className="text-base text-muted-foreground">
