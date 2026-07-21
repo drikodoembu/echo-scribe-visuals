@@ -77,6 +77,59 @@ export type Database = {
         }
         Relationships: []
       }
+      audio_assets: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          format: string
+          id: string
+          model: string | null
+          script_id: string | null
+          size_bytes: number | null
+          storage_path: string
+          title: string
+          updated_at: string
+          user_id: string
+          voice: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          format?: string
+          id?: string
+          model?: string | null
+          script_id?: string | null
+          size_bytes?: number | null
+          storage_path: string
+          title: string
+          updated_at?: string
+          user_id: string
+          voice: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          format?: string
+          id?: string
+          model?: string | null
+          script_id?: string | null
+          size_bytes?: number | null
+          storage_path?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          voice?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_assets_script_id_fkey"
+            columns: ["script_id"]
+            isOneToOne: false
+            referencedRelation: "scripts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
