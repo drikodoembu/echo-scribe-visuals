@@ -45,28 +45,26 @@ export const Route = createFileRoute("/api/scripts/stream")({
         const format = body.format === "long" ? "long" : "short";
         const duration = Math.max(20, Math.min(600, Number(body.duration) || (format === "short" ? 55 : 180)));
 
-        const lovableKey = process.env.LOVABLE_API_KEY;
-        if (!lovableKey) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
+        const googleKey = process.env.GOOGLE_API_KEY;
+        if (!googleKey) return new Response("Missing GOOGLE_API_KEY", { status: 500 });
 
-        const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Lovable-API-Key": lovableKey,
+        const model = "gemini-2.5-flash";
+        const userPrompt = buildScriptPrompt({ topic, saint: body.saint, format, duration });
+        const upstream = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${encodeURIComponent(googleKey)}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: SCRIPT_SYSTEM_PROMPT }] },
+              contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+            }),
           },
-          body: JSON.stringify({
-            model: "google/gemini-3.1-flash-lite",
-            stream: true,
-            messages: [
-              { role: "system", content: SCRIPT_SYSTEM_PROMPT },
-              { role: "user", content: buildScriptPrompt({ topic, saint: body.saint, format, duration }) },
-            ],
-          }),
-        });
+        );
 
         if (!upstream.ok || !upstream.body) {
           const text = await upstream.text().catch(() => "");
-          return new Response(text || "Gateway error", { status: upstream.status });
+          return new Response(text || "Gemini error", { status: upstream.status });
         }
 
         // Convert SSE from Chat Completions into a plain text stream of tokens.
@@ -92,10 +90,12 @@ export const Route = createFileRoute("/api/scripts/stream")({
               if (!data || data === "[DONE]") continue;
               try {
                 const json = JSON.parse(data) as {
-                  choices?: Array<{ delta?: { content?: string } }>;
+                  candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
                 };
-                const delta = json.choices?.[0]?.delta?.content;
-                if (delta) controller.enqueue(encoder.encode(delta));
+                const parts = json.candidates?.[0]?.content?.parts ?? [];
+                for (const p of parts) {
+                  if (p.text) controller.enqueue(encoder.encode(p.text));
+                }
               } catch {
                 // ignore parse errors on partial chunks
               }
