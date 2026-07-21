@@ -1,13 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
-import { Download, Loader2, Mic, Sparkles, Trash2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { Download, Loader2, Mic, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -16,28 +15,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { deleteAudioAsset, listAudioAssets } from "@/lib/audio.functions";
+import {
+  deleteAudioAsset,
+  listAudioAssets,
+  saveAudioAsset,
+} from "@/lib/audio.functions";
 import { listScripts } from "@/lib/scripts.functions";
 
 export const Route = createFileRoute("/_authenticated/app/audio")({
   component: AudioPage,
 });
 
-const VOICES = [
-  { id: "coral", label: "Coral (feminina, calorosa)" },
-  { id: "sage", label: "Sage (feminina, serena)" },
-  { id: "shimmer", label: "Shimmer (feminina, suave)" },
-  { id: "alloy", label: "Alloy (neutra)" },
-  { id: "ash", label: "Ash (masculina, grave)" },
-  { id: "ballad", label: "Ballad (masculina, reverente)" },
-  { id: "echo", label: "Echo (masculina, clara)" },
-  { id: "verse", label: "Verse (masculina, expressiva)" },
-];
+const ACCEPT = "audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/mp4,audio/aac,audio/ogg,audio/webm,audio/flac,audio/x-m4a";
 
 function AudioPage() {
   const qc = useQueryClient();
   const listAudio = useServerFn(listAudioAssets);
   const listScr = useServerFn(listScripts);
+  const save = useServerFn(saveAudioAsset);
   const del = useServerFn(deleteAudioAsset);
 
   const { data: assets = [], isLoading } = useQuery({
@@ -51,55 +46,92 @@ function AudioPage() {
 
   const [scriptId, setScriptId] = useState<string>("");
   const [title, setTitle] = useState("");
-  const [voice, setVoice] = useState("coral");
-  const [text, setText] = useState("");
-  const [generating, setGenerating] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   function pickScript(id: string) {
     setScriptId(id);
     const s = scripts.find((x) => x.id === id);
-    if (s) {
-      setTitle(s.title);
-      setText(s.content);
-    }
+    if (s && !title) setTitle(s.title);
   }
 
-  async function generate() {
-    if (!text.trim()) {
-      toast.error("Informe o texto da narração.");
+  function onFileChange(f: File | null) {
+    setFile(f);
+    if (f && !title) setTitle(f.name.replace(/\.[^.]+$/, ""));
+  }
+
+  async function getAudioDuration(f: File): Promise<number | null> {
+    return new Promise((resolve) => {
+      const url = URL.createObjectURL(f);
+      const el = document.createElement("audio");
+      el.preload = "metadata";
+      el.onloadedmetadata = () => {
+        const d = isFinite(el.duration) ? Math.round(el.duration) : null;
+        URL.revokeObjectURL(url);
+        resolve(d);
+      };
+      el.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(null);
+      };
+      el.src = url;
+    });
+  }
+
+  async function upload() {
+    if (!file) {
+      toast.error("Selecione um arquivo de áudio.");
       return;
     }
-    const { data } = await supabase.auth.getSession();
-    const token = data.session?.access_token;
-    if (!token) {
+    if (!title.trim()) {
+      toast.error("Informe um título.");
+      return;
+    }
+    const { data: sess } = await supabase.auth.getUser();
+    const userId = sess.user?.id;
+    if (!userId) {
       toast.error("Sessão expirada.");
       return;
     }
-    setGenerating(true);
+    setUploading(true);
+    setProgress(10);
     try {
-      const res = await fetch("/api/audio/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          text,
-          voice,
-          title: title || text.slice(0, 60),
+      const ext = (file.name.split(".").pop() || "mp3").toLowerCase();
+      const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("audio")
+        .upload(path, file, {
+          contentType: file.type || "audio/mpeg",
+          upsert: false,
+        });
+      if (upErr) throw new Error(upErr.message);
+      setProgress(70);
+      const duration = await getAudioDuration(file);
+      setProgress(85);
+      await save({
+        data: {
+          title: title.trim(),
+          storage_path: path,
+          format: ext,
+          size_bytes: file.size,
+          duration_seconds: duration,
           script_id: scriptId || null,
-        }),
+        },
       });
-      if (!res.ok) {
-        const msg = await res.text().catch(() => "");
-        if (res.status === 429) toast.error("Limite de uso atingido. Tente novamente.");
-        else if (res.status === 402) toast.error("Créditos de IA esgotados no workspace.");
-        else toast.error(msg || `Erro ${res.status}`);
-        return;
-      }
-      toast.success("Áudio gerado.");
+      setProgress(100);
+      toast.success("Áudio enviado.");
+      setFile(null);
+      setTitle("");
+      setScriptId("");
+      if (inputRef.current) inputRef.current.value = "";
       qc.invalidateQueries({ queryKey: ["audio_assets"] });
     } catch (err) {
-      toast.error((err as Error).message);
+      toast.error((err as Error).message || "Falha no upload.");
     } finally {
-      setGenerating(false);
+      setUploading(false);
+      setTimeout(() => setProgress(0), 500);
     }
   }
 
@@ -117,7 +149,7 @@ function AudioPage() {
       <header className="space-y-1">
         <h1 className="font-display text-3xl text-primary">Áudio</h1>
         <p className="text-sm text-muted-foreground">
-          Narração via Lovable AI (OpenAI TTS). Escolha um roteiro ou cole o texto e gere um MP3.
+          Envie sua narração pronta (MP3, WAV, M4A, OGG…) e associe a um roteiro.
         </p>
       </header>
 
@@ -126,13 +158,11 @@ function AudioPage() {
           <Label>Roteiro (opcional)</Label>
           <Select value={scriptId} onValueChange={pickScript}>
             <SelectTrigger>
-              <SelectValue placeholder="Selecione um roteiro salvo…" />
+              <SelectValue placeholder="Vincular a um roteiro…" />
             </SelectTrigger>
             <SelectContent>
               {scripts.length === 0 ? (
-                <div className="px-3 py-2 text-sm text-muted-foreground">
-                  Nenhum roteiro salvo ainda.
-                </div>
+                <div className="px-3 py-2 text-sm text-muted-foreground">Nenhum roteiro salvo.</div>
               ) : (
                 scripts.map((s) => (
                   <SelectItem key={s.id} value={s.id}>
@@ -144,68 +174,66 @@ function AudioPage() {
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Voz</Label>
-          <Select value={voice} onValueChange={setVoice}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {VOICES.map((v) => (
-                <SelectItem key={v.id} value={v.id}>
-                  {v.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2 md:col-span-2">
           <Label htmlFor="title">Título</Label>
           <Input
             id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Ex.: Narração — Humildade segundo Santa Teresinha"
+            placeholder="Ex.: Narração — Humildade"
           />
         </div>
         <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="text">Texto da narração</Label>
-          <Textarea
-            id="text"
-            rows={8}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Cole aqui o roteiro ou texto a ser narrado (até 5000 caracteres)."
-            className="font-serif text-base leading-relaxed"
+          <Label htmlFor="file">Arquivo de áudio</Label>
+          <Input
+            id="file"
+            ref={inputRef}
+            type="file"
+            accept={ACCEPT}
+            onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
           />
-          <div className="text-right text-xs text-muted-foreground">
-            {text.length} / 5000
-          </div>
+          {file && (
+            <p className="text-xs text-muted-foreground">
+              {file.name} · {(file.size / 1024 / 1024).toFixed(2)} MB
+            </p>
+          )}
         </div>
         <div className="md:col-span-2">
-          <Button onClick={generate} disabled={generating} className="bg-primary text-primary-foreground">
-            {generating ? (
+          {uploading && (
+            <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-secondary">
+              <div
+                className="h-full bg-primary transition-all"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          )}
+          <Button
+            onClick={upload}
+            disabled={uploading || !file}
+            className="bg-primary text-primary-foreground"
+          >
+            {uploading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <Sparkles className="mr-2 h-4 w-4" />
+              <Upload className="mr-2 h-4 w-4" />
             )}
-            Gerar narração
+            Enviar áudio
           </Button>
         </div>
       </div>
 
       <section className="space-y-3">
         <h2 className="font-display text-lg text-primary">Suas narrações</h2>
-        <div className="space-y-3">
-          {isLoading ? (
-            <div className="rounded-lg border border-border bg-card/60 p-4 text-sm text-muted-foreground">
-              Carregando…
-            </div>
-          ) : assets.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-border bg-card/40 p-6 text-sm text-muted-foreground">
-              <Mic className="mb-2 h-5 w-5 text-gold" /> Nenhuma narração ainda. Gere a primeira acima.
-            </div>
-          ) : (
-            assets.map((a) => (
+        {isLoading ? (
+          <div className="rounded-lg border border-border bg-card/60 p-4 text-sm text-muted-foreground">
+            Carregando…
+          </div>
+        ) : assets.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-border bg-card/40 p-6 text-sm text-muted-foreground">
+            <Mic className="mb-2 h-5 w-5 text-gold" /> Nenhum áudio ainda. Envie o primeiro acima.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {assets.map((a) => (
               <div
                 key={a.id}
                 className="flex flex-col gap-3 rounded-lg border border-border bg-card/60 p-4 md:flex-row md:items-center"
@@ -213,8 +241,9 @@ function AudioPage() {
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-medium">{a.title}</div>
                   <div className="text-xs text-muted-foreground">
-                    {a.voice} · {a.format?.toUpperCase()} ·{" "}
-                    {a.size_bytes ? `${Math.round((a.size_bytes / 1024) * 10) / 10} KB` : "—"}
+                    {a.format?.toUpperCase()} ·{" "}
+                    {a.duration_seconds ? `${a.duration_seconds}s` : "—"} ·{" "}
+                    {a.size_bytes ? `${(a.size_bytes / 1024 / 1024).toFixed(2)} MB` : "—"}
                   </div>
                 </div>
                 {a.signed_url && (
@@ -224,10 +253,10 @@ function AudioPage() {
                   {a.signed_url && (
                     <a
                       href={a.signed_url}
-                      download={`${a.title}.mp3`}
+                      download={`${a.title}.${a.format || "mp3"}`}
                       className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:bg-secondary"
                     >
-                      <Download className="h-3 w-3" /> MP3
+                      <Download className="h-3 w-3" /> Baixar
                     </a>
                   )}
                   <Button
@@ -241,9 +270,9 @@ function AudioPage() {
                   </Button>
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

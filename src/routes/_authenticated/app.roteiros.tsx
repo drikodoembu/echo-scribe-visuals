@@ -21,7 +21,7 @@ import {
   listScripts,
   saveScript,
 } from "@/lib/scripts.functions";
-import { SCRIPT_SYSTEM_PROMPT, buildScriptPrompt } from "@/lib/scripts.prompt";
+import { SCRIPT_SYSTEM_PROMPT, buildScriptPrompt, parseScript } from "@/lib/scripts.prompt";
 
 export const Route = createFileRoute("/_authenticated/app/roteiros")({
   component: RoteirosPage,
@@ -78,6 +78,17 @@ function RoteirosPage() {
     format,
     duration,
   });
+
+  const parsed = parseScript(content);
+
+  async function copyText(text: string, label = "Texto") {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`${label} copiado.`);
+    } catch {
+      toast.error("Não foi possível copiar.");
+    }
+  }
 
   async function copyPreview() {
     const full = `SYSTEM:\n${SCRIPT_SYSTEM_PROMPT}\n\nUSER:\n${previewUserPrompt}`;
@@ -389,6 +400,73 @@ function RoteirosPage() {
             className="min-h-[320px] font-serif text-base leading-relaxed"
           />
         </div>
+
+        {(parsed.narration || parsed.imagePrompts.length > 0) && (
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="space-y-2 rounded-xl border border-border bg-card/60 p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-display text-base text-primary">Roteiro para narrar</h3>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => copyText(parsed.narration, "Roteiro")}
+                  disabled={!parsed.narration}
+                >
+                  <Copy className="mr-1 h-3 w-3" /> Copiar
+                </Button>
+              </div>
+              <pre className="max-h-[420px] overflow-auto whitespace-pre-wrap font-serif text-sm leading-relaxed text-foreground">
+                {parsed.narration || "—"}
+              </pre>
+            </div>
+
+            <div className="space-y-2 rounded-xl border border-border bg-card/60 p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-display text-base text-primary">
+                  Prompts de imagem ({parsed.imagePrompts.length})
+                </h3>
+                {parsed.imagePrompts.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() =>
+                      copyText(parsed.imagePrompts.join("\n\n"), "Todos os prompts")
+                    }
+                  >
+                    <Copy className="mr-1 h-3 w-3" /> Copiar todos
+                  </Button>
+                )}
+              </div>
+              {parsed.imagePrompts.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Os prompts de imagem aparecerão aqui após a geração — cole cada um no seu gerador (Midjourney/SDXL/Flux).
+                </p>
+              ) : (
+                <ol className="max-h-[420px] space-y-2 overflow-auto pr-1">
+                  {parsed.imagePrompts.map((p, i) => (
+                    <li
+                      key={i}
+                      className="rounded-md border border-border bg-background/60 p-2 text-xs"
+                    >
+                      <div className="mb-1 flex items-center justify-between gap-2">
+                        <span className="font-medium text-gold">#{i + 1}</span>
+                        <button
+                          onClick={() => copyText(p, `Prompt #${i + 1}`)}
+                          className="inline-flex items-center gap-1 rounded border border-border px-2 py-0.5 hover:bg-secondary"
+                        >
+                          <Copy className="h-3 w-3" /> Copiar
+                        </button>
+                      </div>
+                      <p className="whitespace-pre-wrap font-mono leading-snug text-foreground">
+                        {p}
+                      </p>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );

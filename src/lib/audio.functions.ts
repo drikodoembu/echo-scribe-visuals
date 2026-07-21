@@ -60,3 +60,37 @@ export const signAudioAsset = createServerFn({ method: "POST" })
     if (signErr) throw new Error(signErr.message);
     return { signed_url: signed.signedUrl };
   });
+
+export const saveAudioAsset = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        title: z.string().min(1).max(200),
+        storage_path: z.string().min(1),
+        format: z.string().min(1).max(16),
+        size_bytes: z.number().int().nonnegative().optional().nullable(),
+        duration_seconds: z.number().nonnegative().optional().nullable(),
+        script_id: z.string().uuid().nullable().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: row, error } = await context.supabase
+      .from("audio_assets")
+      .insert({
+        user_id: context.userId,
+        title: data.title,
+        storage_path: data.storage_path,
+        voice: "upload",
+        model: null,
+        format: data.format,
+        size_bytes: data.size_bytes ?? null,
+        duration_seconds: data.duration_seconds ?? null,
+        script_id: data.script_id ?? null,
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    return row;
+  });
