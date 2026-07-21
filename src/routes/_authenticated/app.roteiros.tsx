@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Copy, Eye, Loader2, Plus, Save, Sparkles, StopCircle, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -41,16 +41,53 @@ function RoteirosPage() {
     queryFn: () => list(),
   });
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [title, setTitle] = useState("");
-  const [topic, setTopic] = useState("");
-  const [saint, setSaint] = useState("");
-  const [format, setFormat] = useState<Format>("short");
-  const [duration, setDuration] = useState(55);
-  const [content, setContent] = useState("");
+  // Persistência local — não perde ao trocar de aba.
+  const STORAGE_KEY = "roteiros:draft:v1";
+  type Draft = {
+    selectedId: string | null;
+    title: string;
+    topic: string;
+    saint: string;
+    format: Format;
+    duration: number;
+    content: string;
+  };
+  const initial: Draft = (() => {
+    if (typeof window === "undefined") {
+      return { selectedId: null, title: "", topic: "", saint: "", format: "short", duration: 55, content: "" };
+    }
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return { ...JSON.parse(raw) } as Draft;
+    } catch {
+      // ignore
+    }
+    return { selectedId: null, title: "", topic: "", saint: "", format: "short", duration: 55, content: "" };
+  })();
+
+  const [selectedId, setSelectedId] = useState<string | null>(initial.selectedId);
+  const [title, setTitle] = useState(initial.title);
+  const [topic, setTopic] = useState(initial.topic);
+  const [saint, setSaint] = useState(initial.saint);
+  const [format, setFormat] = useState<Format>(initial.format);
+  const [duration, setDuration] = useState(initial.duration);
+  const [content, setContent] = useState(initial.content);
   const [streaming, setStreaming] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Salva rascunho automaticamente
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ selectedId, title, topic, saint, format, duration, content }),
+      );
+    } catch {
+      // ignore quota
+    }
+  }, [selectedId, title, topic, saint, format, duration, content]);
 
   function loadScript(s: ScriptRow) {
     setSelectedId(s.id);
