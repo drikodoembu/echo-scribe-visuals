@@ -2,7 +2,19 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, ChevronDown, Copy, Eye, Loader2, Plus, Save, Sparkles, StopCircle, Trash2 } from "lucide-react";
+import {
+  BookOpen,
+  ChevronDown,
+  Copy,
+  Image as ImageIcon,
+  Loader2,
+  Mic,
+  Plus,
+  Save,
+  Sparkles,
+  StopCircle,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -237,299 +249,356 @@ function RoteirosPage() {
   });
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)]">
-      <aside className="space-y-3 lg:sticky lg:top-6 lg:self-start">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-xl text-primary">Seus roteiros</h2>
-          <Button size="sm" variant="secondary" onClick={newScript}>
-            <Plus className="mr-1 h-4 w-4" /> Novo
-          </Button>
-        </div>
-        <div className="space-y-1 rounded-2xl border border-border bg-card/70 p-2 shadow-sm backdrop-blur">
-          {isLoading ? (
-            <div className="p-3 text-base text-muted-foreground">Carregando…</div>
-          ) : scripts.length === 0 ? (
-            <div className="p-3 text-base text-muted-foreground">
-              Nenhum roteiro ainda. Gere o primeiro ao lado.
-            </div>
-          ) : (
-            scripts.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => loadScript(s)}
-                className={`w-full rounded-lg px-3 py-2.5 text-left text-base transition hover:bg-secondary/60 ${
-                  selectedId === s.id ? "bg-secondary text-secondary-foreground" : ""
-                }`}
-              >
-                <div className="truncate font-medium">{s.title}</div>
-                <div className="truncate text-sm text-muted-foreground">
-                  {s.format === "short" ? "Shorts" : "Longo"} · {s.duration_seconds}s
-                </div>
-              </button>
-            ))
-          )}
-        </div>
-      </aside>
-
-      <section className="mx-auto w-full max-w-3xl space-y-6">
-        <header className="relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-card/80 via-card/60 to-transparent p-7 shadow-sm backdrop-blur">
-          <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
-          <div className="relative space-y-3">
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium uppercase tracking-wider text-primary">
-              <BookOpen className="h-3.5 w-3.5" /> Irmão Gabriel · Direção espiritual
-            </span>
-            <h1 className="font-display text-4xl leading-tight text-primary md:text-5xl">
-              Roteiros
-            </h1>
-            <p className="max-w-xl text-base leading-relaxed text-muted-foreground">
-              Gancho, citação de santo ou versículo, aplicação prática e chamada final —
-              gerados via streaming no tom sereno do Irmão Gabriel para o canal Catolicoteca.
-            </p>
+    <div className="mx-auto w-full max-w-[1400px] space-y-10 text-foreground">
+      {/* HEADER + STICKY ACTION BAR */}
+      <header className="flex flex-col gap-6 border-b border-border/60 pb-8 md:flex-row md:items-end md:justify-between">
+        <div className="space-y-3">
+          <div className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-gold">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-gold" />
+            Irmão Gabriel · Direção espiritual
           </div>
-        </header>
-
-        <div className="grid gap-5 rounded-2xl border border-border bg-card/70 p-6 shadow-sm backdrop-blur md:grid-cols-2">
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="title" className="text-sm font-medium">Título</Label>
-            <Input
-              id="title"
-              placeholder="Ex.: A humildade segundo Santa Teresinha"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="h-11 text-base"
-            />
-          </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="topic" className="text-sm font-medium">Tema *</Label>
-            <Textarea
-              id="topic"
-              rows={3}
-              placeholder="Sobre o que é o vídeo?"
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              className="text-base leading-relaxed"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="saint" className="text-sm font-medium">Santo (opcional)</Label>
-            <Input
-              id="saint"
-              placeholder="Ex.: Santo Agostinho"
-              value={saint}
-              onChange={(e) => setSaint(e.target.value)}
-              className="h-11 text-base"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Formato</Label>
-            <Select
-              value={format}
-              onValueChange={(v) => {
-                const f = v as Format;
-                setFormat(f);
-                setDuration(f === "short" ? 55 : 180);
-              }}
-            >
-              <SelectTrigger className="h-11 text-base">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="short">Shorts (9:16)</SelectItem>
-                <SelectItem value="long">Vídeo longo (16:9)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="duration" className="text-sm font-medium">Duração (segundos)</Label>
-            <Input
-              id="duration"
-              type="number"
-              min={20}
-              max={600}
-              value={duration}
-              onChange={(e) => setDuration(Number(e.target.value) || 0)}
-              className="h-11 text-base"
-            />
-          </div>
+          <h1 className="font-display text-4xl font-bold leading-[1.05] tracking-tight text-gold md:text-6xl">
+            Roteiro de<br />Produção
+          </h1>
+          <p className="max-w-xl text-base font-light leading-relaxed text-muted-foreground">
+            Gancho, citação, aplicação e chamada final — refinados no tom sereno do
+            Irmão Gabriel para o canal Catolicoteca.
+          </p>
         </div>
 
-        {/* Barra de ação sticky — sempre visível, inclusive Salvar */}
-        <div className="sticky top-4 z-20 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card/90 p-3 shadow-lg backdrop-blur">
+        <div className="sticky top-4 z-40 flex flex-wrap items-center gap-2 self-start rounded-2xl border border-border bg-card/80 p-2 shadow-[var(--shadow-gold)] backdrop-blur-md">
           {streaming ? (
-            <Button onClick={stop} variant="destructive" size="lg">
+            <Button onClick={stop} variant="destructive" size="lg" className="rounded-xl">
               <StopCircle className="mr-2 h-5 w-5" /> Parar
             </Button>
           ) : (
-            <Button onClick={generate} size="lg" className="bg-primary text-primary-foreground shadow-md hover:shadow-lg">
-              <Sparkles className="mr-2 h-5 w-5" /> Gerar roteiro
+            <Button
+              onClick={generate}
+              size="lg"
+              className="rounded-xl bg-primary font-semibold text-primary-foreground shadow-md hover:brightness-110"
+            >
+              <Sparkles className="mr-2 h-5 w-5" /> Gerar
             </Button>
           )}
           <Button
-            variant="default"
+            variant="outline"
             size="lg"
             onClick={() => saveMutation.mutate()}
             disabled={saveMutation.isPending || streaming || !content.trim()}
-            className="bg-accent text-accent-foreground hover:bg-accent/90"
+            className="rounded-xl border-border font-medium"
           >
             {saveMutation.isPending ? (
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             ) : (
               <Save className="mr-2 h-5 w-5" />
             )}
-            Salvar roteiro
+            Salvar
           </Button>
-          {!content.trim() && !streaming && (
-            <span className="text-sm text-muted-foreground">
-              Gere ou edite o conteúdo abaixo para habilitar Salvar.
-            </span>
+          <div className="mx-1 hidden h-6 w-px bg-border md:block" />
+          {selectedId && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => deleteMutation.mutate(selectedId)}
+              disabled={deleteMutation.isPending}
+              className="rounded-xl text-muted-foreground hover:text-destructive"
+              title="Excluir roteiro"
+            >
+              <Trash2 className="h-5 w-5" />
+            </Button>
           )}
-          <div className="ml-auto flex items-center gap-2">
-            {selectedId && (
-              <Button
-                variant="ghost"
-                size="lg"
-                onClick={() => deleteMutation.mutate(selectedId)}
-                disabled={deleteMutation.isPending}
-                className="text-destructive hover:text-destructive"
-              >
-                <Trash2 className="mr-2 h-5 w-5" /> Excluir
-              </Button>
-            )}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-card/70 shadow-sm backdrop-blur">
-          <button
-            type="button"
-            onClick={() => setShowPreview((v) => !v)}
-            className="flex w-full items-center justify-between gap-2 px-6 py-4 text-left"
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={newScript}
+            className="rounded-xl text-muted-foreground hover:text-foreground"
+            title="Novo roteiro"
           >
-            <span className="inline-flex items-center gap-2 text-base font-medium text-primary">
-              <Eye className="h-4 w-4" /> Prévia do prompt enviado à IA
-            </span>
-            <ChevronDown
-              className={`h-4 w-4 text-muted-foreground transition-transform ${
-                showPreview ? "rotate-180" : ""
-              }`}
-            />
-          </button>
-          {showPreview && (
-            <div className="space-y-4 border-t border-border px-6 py-5">
-              <p className="text-sm text-muted-foreground">
-                Este é o conteúdo exato enviado ao modelo <code>gemini-2.5-flash</code>{" "}
-                quando você clica em <em>Gerar roteiro</em>. Ajuste tema, santo, formato ou
-                duração acima para ver a atualização.
-              </p>
-              <div className="space-y-1">
-                <Label className="text-xs uppercase tracking-wide text-muted-foreground">
-                  System
+            <Plus className="h-5 w-5" />
+          </Button>
+        </div>
+      </header>
+
+      {/* MAIN GRID */}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        {/* LEFT COLUMN — Controls + Library */}
+        <aside className="space-y-6 lg:col-span-1">
+          <div className="space-y-5 rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="space-y-1.5">
+              <Label htmlFor="title" className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">
+                Título do Projeto
+              </Label>
+              <Input
+                id="title"
+                placeholder="Ex.: A humildade segundo Santa Teresinha"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="h-11 rounded-lg bg-background/60 text-base"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="topic" className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">
+                Tema Central *
+              </Label>
+              <Textarea
+                id="topic"
+                rows={4}
+                placeholder="Descreva a essência teológica…"
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                className="resize-none rounded-lg bg-background/60 text-base leading-relaxed"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="saint" className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">
+                  Santo
                 </Label>
-                <pre className="whitespace-pre-wrap rounded-md bg-secondary/40 p-3 font-mono text-sm leading-relaxed text-foreground">
-                  {SCRIPT_SYSTEM_PROMPT}
-                </pre>
+                <Input
+                  id="saint"
+                  placeholder="Ex.: Agostinho"
+                  value={saint}
+                  onChange={(e) => setSaint(e.target.value)}
+                  className="h-11 rounded-lg bg-background/60 text-base"
+                />
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs uppercase tracking-wide text-muted-foreground">
-                  User
+              <div className="space-y-1.5">
+                <Label htmlFor="duration" className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">
+                  Duração (s)
                 </Label>
-                <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-md bg-secondary/40 p-3 font-mono text-sm leading-relaxed text-foreground">
-                  {previewUserPrompt}
-                </pre>
-              </div>
-              <div className="flex justify-end">
-                <Button size="sm" variant="secondary" onClick={copyPreview}>
-                  <Copy className="mr-2 h-4 w-4" /> Copiar prompt completo
-                </Button>
+                <Input
+                  id="duration"
+                  type="number"
+                  min={20}
+                  max={600}
+                  value={duration}
+                  onChange={(e) => setDuration(Number(e.target.value) || 0)}
+                  className="h-11 rounded-lg bg-background/60 text-base"
+                />
               </div>
             </div>
-          )}
-        </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="content" className="text-base font-medium">Prévia do roteiro</Label>
-            {streaming && (
-              <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-                <Loader2 className="h-3 w-3 animate-spin" /> gerando…
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">
+                Formato de Saída
+              </Label>
+              <Select
+                value={format}
+                onValueChange={(v) => {
+                  const f = v as Format;
+                  setFormat(f);
+                  setDuration(f === "short" ? 55 : 180);
+                }}
+              >
+                <SelectTrigger className="h-11 rounded-lg bg-background/60 text-base">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="short">Shorts (9:16)</SelectItem>
+                  <SelectItem value="long">Vídeo longo (16:9)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Prompt Accordion */}
+          <div className="overflow-hidden rounded-xl border border-border">
+            <button
+              type="button"
+              onClick={() => setShowPreview((v) => !v)}
+              className="flex w-full items-center justify-between bg-card/60 p-4 text-left transition-colors hover:bg-card"
+            >
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">
+                Configurações de Prompt (IA)
               </span>
+              <ChevronDown
+                className={`h-4 w-4 text-muted-foreground transition-transform ${
+                  showPreview ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+            {showPreview && (
+              <div className="space-y-4 border-t border-border bg-card/30 p-4">
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  Conteúdo enviado ao modelo <code className="text-gold">gemini-2.5-flash</code>.
+                </p>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">System</p>
+                  <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-md bg-background/60 p-3 font-mono text-xs leading-relaxed text-foreground">
+                    {SCRIPT_SYSTEM_PROMPT}
+                  </pre>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">User</p>
+                  <pre className="max-h-56 overflow-auto whitespace-pre-wrap rounded-md bg-background/60 p-3 font-mono text-xs leading-relaxed text-foreground">
+                    {previewUserPrompt}
+                  </pre>
+                </div>
+                <div className="flex justify-end">
+                  <Button size="sm" variant="secondary" onClick={copyPreview}>
+                    <Copy className="mr-2 h-3.5 w-3.5" /> Copiar prompt completo
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
-          <Textarea
-            id="content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="O roteiro aparecerá aqui em tempo real. Você pode editar antes de salvar."
-            className="min-h-[420px] rounded-2xl border-border bg-card/70 font-serif text-lg leading-relaxed shadow-sm backdrop-blur"
-          />
-        </div>
 
-        {(parsed.narration || parsed.imagePrompts.length > 0) && (
-          <div className="grid gap-5 lg:grid-cols-2">
-            <div className="space-y-3 rounded-2xl border border-border bg-card/70 p-5 shadow-sm backdrop-blur">
-              <div className="flex items-center justify-between">
-                <h3 className="font-display text-lg text-primary">Roteiro para narrar</h3>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => copyText(parsed.narration, "Roteiro")}
-                  disabled={!parsed.narration}
-                >
-                  <Copy className="mr-1 h-3 w-3" /> Copiar
-                </Button>
-              </div>
-              <pre className="max-h-[460px] overflow-auto whitespace-pre-wrap font-serif text-base leading-relaxed text-foreground">
-                {parsed.narration || "—"}
-              </pre>
+          {/* Library */}
+          <div className="space-y-3 rounded-2xl border border-border bg-card/40 p-4">
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-gold">
+                <BookOpen className="h-3.5 w-3.5" /> Biblioteca
+              </span>
+              <Button size="sm" variant="ghost" onClick={newScript} className="h-7 rounded-md text-xs">
+                <Plus className="mr-1 h-3.5 w-3.5" /> Novo
+              </Button>
             </div>
-
-            <div className="space-y-3 rounded-2xl border border-border bg-card/70 p-5 shadow-sm backdrop-blur">
-              <div className="flex items-center justify-between">
-                <h3 className="font-display text-lg text-primary">
-                  Prompts de imagem ({parsed.imagePrompts.length})
-                </h3>
-                {parsed.imagePrompts.length > 0 && (
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() =>
-                      copyText(parsed.imagePrompts.join("\n\n"), "Todos os prompts")
-                    }
-                  >
-                    <Copy className="mr-1 h-3 w-3" /> Copiar todos
-                  </Button>
-                )}
-              </div>
-              {parsed.imagePrompts.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Os prompts de imagem aparecerão aqui após a geração — cole cada um no seu gerador (Midjourney/SDXL/Flux).
-                </p>
+            <div className="space-y-1">
+              {isLoading ? (
+                <div className="p-3 text-sm text-muted-foreground">Carregando…</div>
+              ) : scripts.length === 0 ? (
+                <div className="p-3 text-sm text-muted-foreground">
+                  Nenhum roteiro ainda. Gere o primeiro.
+                </div>
               ) : (
-                <ol className="max-h-[460px] space-y-2 overflow-auto pr-1">
-                  {parsed.imagePrompts.map((p, i) => (
-                    <li
-                      key={i}
-                      className="rounded-lg border border-border bg-background/60 p-3 text-sm"
-                    >
-                      <div className="mb-1 flex items-center justify-between gap-2">
-                        <span className="font-medium text-gold">#{i + 1}</span>
-                        <button
-                          onClick={() => copyText(p, `Prompt #${i + 1}`)}
-                          className="inline-flex items-center gap-1 rounded border border-border px-2 py-0.5 hover:bg-secondary"
-                        >
-                          <Copy className="h-3 w-3" /> Copiar
-                        </button>
-                      </div>
-                      <p className="whitespace-pre-wrap font-mono leading-snug text-foreground">
-                        {p}
-                      </p>
-                    </li>
-                  ))}
-                </ol>
+                scripts.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => loadScript(s)}
+                    className={`w-full rounded-lg border px-3 py-2.5 text-left transition ${
+                      selectedId === s.id
+                        ? "border-gold/40 bg-gold/10"
+                        : "border-transparent hover:border-border hover:bg-background/40"
+                    }`}
+                  >
+                    <div className="truncate text-sm font-medium text-foreground">{s.title}</div>
+                    <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                      {s.format === "short" ? "Shorts · 9:16" : "Longo · 16:9"} · {s.duration_seconds}s
+                    </div>
+                  </button>
+                ))
               )}
             </div>
           </div>
-        )}
-      </section>
+        </aside>
+
+        {/* RIGHT COLUMN — Editor + Outputs */}
+        <div className="space-y-8 lg:col-span-2">
+          {/* Streaming Editor */}
+          <div className="relative rounded-2xl border border-border bg-card p-8 shadow-2xl md:p-10">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
+            <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-background px-4 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
+              Editor de Streaming
+            </div>
+
+            <div className="mb-6 flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">
+                Texto em construção
+              </span>
+              {streaming ? (
+                <span className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-destructive" />
+                  Gerando…
+                </span>
+              ) : (
+                <span className="text-xs text-muted-foreground">
+                  {content.length.toLocaleString()} caracteres
+                </span>
+              )}
+            </div>
+
+            <Textarea
+              id="content"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="O roteiro aparecerá aqui em tempo real. Você pode editar antes de salvar."
+              className="min-h-[520px] w-full resize-none border-0 bg-transparent p-0 font-serif text-lg leading-[1.8] text-foreground shadow-none focus-visible:ring-0 md:text-xl"
+            />
+
+            {!content.trim() && !streaming && (
+              <p className="mt-4 text-sm text-muted-foreground">
+                Preencha o tema ao lado e clique em <span className="text-gold">Gerar</span> para começar.
+              </p>
+            )}
+          </div>
+
+          {/* Output Cards */}
+          {(parsed.narration || parsed.imagePrompts.length > 0) && (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="space-y-4 rounded-2xl border border-border bg-card/40 p-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="inline-flex items-center gap-2 font-display text-sm font-bold uppercase tracking-[0.18em] text-gold">
+                    <Mic className="h-4 w-4" /> Roteiro para Narrar
+                  </h3>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => copyText(parsed.narration, "Roteiro")}
+                    disabled={!parsed.narration}
+                    className="h-8 rounded-md"
+                  >
+                    <Copy className="mr-1 h-3.5 w-3.5" /> Copiar
+                  </Button>
+                </div>
+                <div className="rounded-lg border-l-2 border-gold bg-background/50 p-4">
+                  <pre className="max-h-[420px] overflow-auto whitespace-pre-wrap font-serif text-base leading-[1.75] text-foreground">
+                    {parsed.narration || "—"}
+                  </pre>
+                </div>
+              </div>
+
+              <div className="space-y-4 rounded-2xl border border-border bg-card/40 p-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="inline-flex items-center gap-2 font-display text-sm font-bold uppercase tracking-[0.18em] text-gold">
+                    <ImageIcon className="h-4 w-4" /> Prompts de Imagem ({parsed.imagePrompts.length})
+                  </h3>
+                  {parsed.imagePrompts.length > 0 && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => copyText(parsed.imagePrompts.join("\n\n"), "Todos os prompts")}
+                      className="h-8 rounded-md"
+                    >
+                      <Copy className="mr-1 h-3.5 w-3.5" /> Copiar todos
+                    </Button>
+                  )}
+                </div>
+                {parsed.imagePrompts.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Os prompts aparecerão aqui após a geração — cole cada um no seu gerador (Midjourney/SDXL/Flux).
+                  </p>
+                ) : (
+                  <ol className="max-h-[420px] space-y-2 overflow-auto pr-1">
+                    {parsed.imagePrompts.map((p, i) => (
+                      <li
+                        key={i}
+                        className="group flex gap-3 rounded-lg border border-transparent p-3 text-sm transition hover:border-border hover:bg-background/40"
+                      >
+                        <span className="mt-0.5 font-mono text-xs font-bold text-gold">
+                          {String(i + 1).padStart(2, "0")}.
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="whitespace-pre-wrap font-mono text-xs leading-relaxed text-muted-foreground">
+                            {p}
+                          </p>
+                          <button
+                            onClick={() => copyText(p, `Prompt #${i + 1}`)}
+                            className="mt-2 inline-flex items-center gap-1 text-[10px] uppercase tracking-widest text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-gold"
+                          >
+                            <Copy className="h-3 w-3" /> Copiar
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
