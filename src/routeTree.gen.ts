@@ -17,6 +17,7 @@ import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as ApiScriptsStreamRouteImport } from './routes/api/scripts.stream'
+import { Route as ApiAudioGenerateRouteImport } from './routes/api/audio.generate'
 import { Route as AuthenticatedAppRoteirosRouteImport } from './routes/_authenticated/app.roteiros'
 import { Route as AuthenticatedAppPublicacaoRouteImport } from './routes/_authenticated/app.publicacao'
 import { Route as AuthenticatedAppMusicasRouteImport } from './routes/_authenticated/app.musicas'
@@ -64,6 +65,11 @@ const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
 const ApiScriptsStreamRoute = ApiScriptsStreamRouteImport.update({
   id: '/api/scripts/stream',
   path: '/api/scripts/stream',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAudioGenerateRoute = ApiAudioGenerateRouteImport.update({
+  id: '/api/audio/generate',
+  path: '/api/audio/generate',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppRoteirosRoute =
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/app/musicas': typeof AuthenticatedAppMusicasRoute
   '/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
   '/app/roteiros': typeof AuthenticatedAppRoteirosRoute
+  '/api/audio/generate': typeof ApiAudioGenerateRoute
   '/api/scripts/stream': typeof ApiScriptsStreamRoute
   '/app/': typeof AuthenticatedAppIndexRoute
 }
@@ -149,6 +156,7 @@ export interface FileRoutesByTo {
   '/app/musicas': typeof AuthenticatedAppMusicasRoute
   '/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
   '/app/roteiros': typeof AuthenticatedAppRoteirosRoute
+  '/api/audio/generate': typeof ApiAudioGenerateRoute
   '/api/scripts/stream': typeof ApiScriptsStreamRoute
   '/app': typeof AuthenticatedAppIndexRoute
 }
@@ -169,6 +177,7 @@ export interface FileRoutesById {
   '/_authenticated/app/musicas': typeof AuthenticatedAppMusicasRoute
   '/_authenticated/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
   '/_authenticated/app/roteiros': typeof AuthenticatedAppRoteirosRoute
+  '/api/audio/generate': typeof ApiAudioGenerateRoute
   '/api/scripts/stream': typeof ApiScriptsStreamRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
 }
@@ -189,6 +198,7 @@ export interface FileRouteTypes {
     | '/app/musicas'
     | '/app/publicacao'
     | '/app/roteiros'
+    | '/api/audio/generate'
     | '/api/scripts/stream'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/app/musicas'
     | '/app/publicacao'
     | '/app/roteiros'
+    | '/api/audio/generate'
     | '/api/scripts/stream'
     | '/app'
   id:
@@ -225,6 +236,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/musicas'
     | '/_authenticated/app/publicacao'
     | '/_authenticated/app/roteiros'
+    | '/api/audio/generate'
     | '/api/scripts/stream'
     | '/_authenticated/app/'
   fileRoutesById: FileRoutesById
@@ -234,6 +246,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiAudioGenerateRoute: typeof ApiAudioGenerateRoute
   ApiScriptsStreamRoute: typeof ApiScriptsStreamRoute
 }
 
@@ -293,6 +306,13 @@ declare module '@tanstack/react-router' {
       path: '/api/scripts/stream'
       fullPath: '/api/scripts/stream'
       preLoaderRoute: typeof ApiScriptsStreamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/audio/generate': {
+      id: '/api/audio/generate'
+      path: '/api/audio/generate'
+      fullPath: '/api/audio/generate'
+      preLoaderRoute: typeof ApiAudioGenerateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/app/roteiros': {
@@ -416,6 +436,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiAudioGenerateRoute: ApiAudioGenerateRoute,
   ApiScriptsStreamRoute: ApiScriptsStreamRoute,
 }
 export const routeTree = rootRouteImport
