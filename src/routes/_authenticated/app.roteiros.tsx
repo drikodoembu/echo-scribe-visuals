@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Copy, Eye, Loader2, Plus, Save, Sparkles, StopCircle, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -41,16 +41,53 @@ function RoteirosPage() {
     queryFn: () => list(),
   });
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [title, setTitle] = useState("");
-  const [topic, setTopic] = useState("");
-  const [saint, setSaint] = useState("");
-  const [format, setFormat] = useState<Format>("short");
-  const [duration, setDuration] = useState(55);
-  const [content, setContent] = useState("");
+  // Persistência local — não perde ao trocar de aba.
+  const STORAGE_KEY = "roteiros:draft:v1";
+  type Draft = {
+    selectedId: string | null;
+    title: string;
+    topic: string;
+    saint: string;
+    format: Format;
+    duration: number;
+    content: string;
+  };
+  const initial: Draft = (() => {
+    if (typeof window === "undefined") {
+      return { selectedId: null, title: "", topic: "", saint: "", format: "short", duration: 55, content: "" };
+    }
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return { ...JSON.parse(raw) } as Draft;
+    } catch {
+      // ignore
+    }
+    return { selectedId: null, title: "", topic: "", saint: "", format: "short", duration: 55, content: "" };
+  })();
+
+  const [selectedId, setSelectedId] = useState<string | null>(initial.selectedId);
+  const [title, setTitle] = useState(initial.title);
+  const [topic, setTopic] = useState(initial.topic);
+  const [saint, setSaint] = useState(initial.saint);
+  const [format, setFormat] = useState<Format>(initial.format);
+  const [duration, setDuration] = useState(initial.duration);
+  const [content, setContent] = useState(initial.content);
   const [streaming, setStreaming] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Salva rascunho automaticamente
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ selectedId, title, topic, saint, format, duration, content }),
+      );
+    } catch {
+      // ignore quota
+    }
+  }, [selectedId, title, topic, saint, format, duration, content]);
 
   function loadScript(s: ScriptRow) {
     setSelectedId(s.id);
@@ -200,19 +237,19 @@ function RoteirosPage() {
   });
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-      <aside className="space-y-3">
+    <div className="grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)]">
+      <aside className="space-y-3 lg:sticky lg:top-6 lg:self-start">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg text-primary">Seus roteiros</h2>
+          <h2 className="font-display text-xl text-primary">Seus roteiros</h2>
           <Button size="sm" variant="secondary" onClick={newScript}>
             <Plus className="mr-1 h-4 w-4" /> Novo
           </Button>
         </div>
-        <div className="space-y-1 rounded-xl border border-border bg-card/60 p-2">
+        <div className="space-y-1 rounded-2xl border border-border bg-card/70 p-2 shadow-sm backdrop-blur">
           {isLoading ? (
-            <div className="p-3 text-sm text-muted-foreground">Carregando…</div>
+            <div className="p-3 text-base text-muted-foreground">Carregando…</div>
           ) : scripts.length === 0 ? (
-            <div className="p-3 text-sm text-muted-foreground">
+            <div className="p-3 text-base text-muted-foreground">
               Nenhum roteiro ainda. Gere o primeiro ao lado.
             </div>
           ) : (
@@ -220,12 +257,12 @@ function RoteirosPage() {
               <button
                 key={s.id}
                 onClick={() => loadScript(s)}
-                className={`w-full rounded-md px-3 py-2 text-left text-sm transition hover:bg-secondary/60 ${
+                className={`w-full rounded-lg px-3 py-2.5 text-left text-base transition hover:bg-secondary/60 ${
                   selectedId === s.id ? "bg-secondary text-secondary-foreground" : ""
                 }`}
               >
                 <div className="truncate font-medium">{s.title}</div>
-                <div className="truncate text-xs text-muted-foreground">
+                <div className="truncate text-sm text-muted-foreground">
                   {s.format === "short" ? "Shorts" : "Longo"} · {s.duration_seconds}s
                 </div>
               </button>
@@ -234,45 +271,48 @@ function RoteirosPage() {
         </div>
       </aside>
 
-      <section className="space-y-5">
+      <section className="space-y-6">
         <header className="space-y-1">
-          <h1 className="font-display text-3xl text-primary">Roteiros</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="font-display text-4xl text-primary md:text-5xl">Roteiros</h1>
+          <p className="text-base text-muted-foreground">
             Gancho, citação de santo, aplicação e chamada — gerados via streaming.
           </p>
         </header>
 
-        <div className="grid gap-4 rounded-xl border border-border bg-card/60 p-5 md:grid-cols-2">
+        <div className="grid gap-5 rounded-2xl border border-border bg-card/70 p-6 shadow-sm backdrop-blur md:grid-cols-2">
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="title">Título</Label>
+            <Label htmlFor="title" className="text-sm font-medium">Título</Label>
             <Input
               id="title"
               placeholder="Ex.: A humildade segundo Santa Teresinha"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              className="h-11 text-base"
             />
           </div>
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="topic">Tema *</Label>
+            <Label htmlFor="topic" className="text-sm font-medium">Tema *</Label>
             <Textarea
               id="topic"
-              rows={2}
+              rows={3}
               placeholder="Sobre o que é o vídeo?"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
+              className="text-base leading-relaxed"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="saint">Santo (opcional)</Label>
+            <Label htmlFor="saint" className="text-sm font-medium">Santo (opcional)</Label>
             <Input
               id="saint"
               placeholder="Ex.: Santo Agostinho"
               value={saint}
               onChange={(e) => setSaint(e.target.value)}
+              className="h-11 text-base"
             />
           </div>
           <div className="space-y-2">
-            <Label>Formato</Label>
+            <Label className="text-sm font-medium">Formato</Label>
             <Select
               value={format}
               onValueChange={(v) => {
@@ -281,7 +321,7 @@ function RoteirosPage() {
                 setDuration(f === "short" ? 55 : 180);
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-11 text-base">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -291,7 +331,7 @@ function RoteirosPage() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="duration">Duração (segundos)</Label>
+            <Label htmlFor="duration" className="text-sm font-medium">Duração (segundos)</Label>
             <Input
               id="duration"
               type="number"
@@ -299,50 +339,63 @@ function RoteirosPage() {
               max={600}
               value={duration}
               onChange={(e) => setDuration(Number(e.target.value) || 0)}
+              className="h-11 text-base"
             />
           </div>
-          <div className="flex flex-wrap items-end gap-2 md:col-span-2">
-            {streaming ? (
-              <Button onClick={stop} variant="destructive">
-                <StopCircle className="mr-2 h-4 w-4" /> Parar
-              </Button>
-            ) : (
-              <Button onClick={generate} className="bg-primary text-primary-foreground">
-                <Sparkles className="mr-2 h-4 w-4" /> Gerar roteiro
-              </Button>
-            )}
-            <Button
-              variant="secondary"
-              onClick={() => saveMutation.mutate()}
-              disabled={saveMutation.isPending || streaming || !content.trim()}
-            >
-              {saveMutation.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="mr-2 h-4 w-4" />
-              )}
-              Salvar
+        </div>
+
+        {/* Barra de ação sticky — sempre visível, inclusive Salvar */}
+        <div className="sticky top-4 z-20 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card/90 p-3 shadow-lg backdrop-blur">
+          {streaming ? (
+            <Button onClick={stop} variant="destructive" size="lg">
+              <StopCircle className="mr-2 h-5 w-5" /> Parar
             </Button>
+          ) : (
+            <Button onClick={generate} size="lg" className="bg-primary text-primary-foreground shadow-md hover:shadow-lg">
+              <Sparkles className="mr-2 h-5 w-5" /> Gerar roteiro
+            </Button>
+          )}
+          <Button
+            variant="default"
+            size="lg"
+            onClick={() => saveMutation.mutate()}
+            disabled={saveMutation.isPending || streaming || !content.trim()}
+            className="bg-accent text-accent-foreground hover:bg-accent/90"
+          >
+            {saveMutation.isPending ? (
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-5 w-5" />
+            )}
+            Salvar roteiro
+          </Button>
+          {!content.trim() && !streaming && (
+            <span className="text-sm text-muted-foreground">
+              Gere ou edite o conteúdo abaixo para habilitar Salvar.
+            </span>
+          )}
+          <div className="ml-auto flex items-center gap-2">
             {selectedId && (
               <Button
                 variant="ghost"
+                size="lg"
                 onClick={() => deleteMutation.mutate(selectedId)}
                 disabled={deleteMutation.isPending}
                 className="text-destructive hover:text-destructive"
               >
-                <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                <Trash2 className="mr-2 h-5 w-5" /> Excluir
               </Button>
             )}
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card/60">
+        <div className="rounded-2xl border border-border bg-card/70 shadow-sm backdrop-blur">
           <button
             type="button"
             onClick={() => setShowPreview((v) => !v)}
-            className="flex w-full items-center justify-between gap-2 px-5 py-3 text-left"
+            className="flex w-full items-center justify-between gap-2 px-6 py-4 text-left"
           >
-            <span className="inline-flex items-center gap-2 text-sm font-medium text-primary">
+            <span className="inline-flex items-center gap-2 text-base font-medium text-primary">
               <Eye className="h-4 w-4" /> Prévia do prompt enviado à IA
             </span>
             <ChevronDown
@@ -352,8 +405,8 @@ function RoteirosPage() {
             />
           </button>
           {showPreview && (
-            <div className="space-y-4 border-t border-border px-5 py-4">
-              <p className="text-xs text-muted-foreground">
+            <div className="space-y-4 border-t border-border px-6 py-5">
+              <p className="text-sm text-muted-foreground">
                 Este é o conteúdo exato enviado ao modelo <code>gemini-2.5-flash</code>{" "}
                 quando você clica em <em>Gerar roteiro</em>. Ajuste tema, santo, formato ou
                 duração acima para ver a atualização.
@@ -362,7 +415,7 @@ function RoteirosPage() {
                 <Label className="text-xs uppercase tracking-wide text-muted-foreground">
                   System
                 </Label>
-                <pre className="whitespace-pre-wrap rounded-md bg-secondary/40 p-3 font-mono text-xs leading-relaxed text-foreground">
+                <pre className="whitespace-pre-wrap rounded-md bg-secondary/40 p-3 font-mono text-sm leading-relaxed text-foreground">
                   {SCRIPT_SYSTEM_PROMPT}
                 </pre>
               </div>
@@ -370,7 +423,7 @@ function RoteirosPage() {
                 <Label className="text-xs uppercase tracking-wide text-muted-foreground">
                   User
                 </Label>
-                <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-md bg-secondary/40 p-3 font-mono text-xs leading-relaxed text-foreground">
+                <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-md bg-secondary/40 p-3 font-mono text-sm leading-relaxed text-foreground">
                   {previewUserPrompt}
                 </pre>
               </div>
@@ -385,9 +438,9 @@ function RoteirosPage() {
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="content">Prévia do roteiro</Label>
+            <Label htmlFor="content" className="text-base font-medium">Prévia do roteiro</Label>
             {streaming && (
-              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
                 <Loader2 className="h-3 w-3 animate-spin" /> gerando…
               </span>
             )}
@@ -397,15 +450,15 @@ function RoteirosPage() {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="O roteiro aparecerá aqui em tempo real. Você pode editar antes de salvar."
-            className="min-h-[320px] font-serif text-base leading-relaxed"
+            className="min-h-[420px] rounded-2xl border-border bg-card/70 font-serif text-lg leading-relaxed shadow-sm backdrop-blur"
           />
         </div>
 
         {(parsed.narration || parsed.imagePrompts.length > 0) && (
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="space-y-2 rounded-xl border border-border bg-card/60 p-4">
+          <div className="grid gap-5 lg:grid-cols-2">
+            <div className="space-y-3 rounded-2xl border border-border bg-card/70 p-5 shadow-sm backdrop-blur">
               <div className="flex items-center justify-between">
-                <h3 className="font-display text-base text-primary">Roteiro para narrar</h3>
+                <h3 className="font-display text-lg text-primary">Roteiro para narrar</h3>
                 <Button
                   size="sm"
                   variant="secondary"
@@ -415,14 +468,14 @@ function RoteirosPage() {
                   <Copy className="mr-1 h-3 w-3" /> Copiar
                 </Button>
               </div>
-              <pre className="max-h-[420px] overflow-auto whitespace-pre-wrap font-serif text-sm leading-relaxed text-foreground">
+              <pre className="max-h-[460px] overflow-auto whitespace-pre-wrap font-serif text-base leading-relaxed text-foreground">
                 {parsed.narration || "—"}
               </pre>
             </div>
 
-            <div className="space-y-2 rounded-xl border border-border bg-card/60 p-4">
+            <div className="space-y-3 rounded-2xl border border-border bg-card/70 p-5 shadow-sm backdrop-blur">
               <div className="flex items-center justify-between">
-                <h3 className="font-display text-base text-primary">
+                <h3 className="font-display text-lg text-primary">
                   Prompts de imagem ({parsed.imagePrompts.length})
                 </h3>
                 {parsed.imagePrompts.length > 0 && (
@@ -438,15 +491,15 @@ function RoteirosPage() {
                 )}
               </div>
               {parsed.imagePrompts.length === 0 ? (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Os prompts de imagem aparecerão aqui após a geração — cole cada um no seu gerador (Midjourney/SDXL/Flux).
                 </p>
               ) : (
-                <ol className="max-h-[420px] space-y-2 overflow-auto pr-1">
+                <ol className="max-h-[460px] space-y-2 overflow-auto pr-1">
                   {parsed.imagePrompts.map((p, i) => (
                     <li
                       key={i}
-                      className="rounded-md border border-border bg-background/60 p-2 text-xs"
+                      className="rounded-lg border border-border bg-background/60 p-3 text-sm"
                     >
                       <div className="mb-1 flex items-center justify-between gap-2">
                         <span className="font-medium text-gold">#{i + 1}</span>
