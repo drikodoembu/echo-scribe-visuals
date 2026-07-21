@@ -175,7 +175,7 @@ function RoteirosPage() {
           format,
           duration_seconds: duration,
           content,
-          model: "google/gemini-3.5-flash",
+          model: "google/gemini-3.1-flash-lite",
         },
       });
     },
@@ -354,7 +354,7 @@ function RoteirosPage() {
           {showPreview && (
             <div className="space-y-4 border-t border-border px-5 py-4">
               <p className="text-xs text-muted-foreground">
-                Este é o conteúdo exato enviado ao modelo <code>google/gemini-3.5-flash</code>{" "}
+                Este é o conteúdo exato enviado ao modelo <code>google/gemini-3.1-flash-lite</code>{" "}
                 quando você clica em <em>Gerar roteiro</em>. Ajuste tema, santo, formato ou
                 duração acima para ver a atualização.
               </p>
