@@ -55,7 +55,7 @@ export const Route = createFileRoute("/api/scripts/stream")({
             "Lovable-API-Key": lovableKey,
           },
           body: JSON.stringify({
-            model: "google/gemini-3.5-flash",
+            model: "google/gemini-3.1-flash-lite",
             stream: true,
             messages: [
               { role: "system", content: SCRIPT_SYSTEM_PROMPT },
