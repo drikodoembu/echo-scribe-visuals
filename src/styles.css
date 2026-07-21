@@ -59,6 +59,7 @@
   --color-ink: var(--ink);
   --font-display: "Cinzel", ui-serif, Georgia, serif;
   --font-serif: "Cormorant Garamond", ui-serif, Georgia, serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --shadow-sacred: 0 20px 60px -20px oklch(0.25 0.09 20 / 0.35);
   --shadow-gold: 0 8px 24px -8px oklch(0.72 0.14 78 / 0.45);
 }
@@ -72,7 +73,7 @@
   --wine: oklch(0.32 0.11 20);           /* vinho eucarístico */
   --wine-foreground: oklch(0.97 0.02 80);
   --parchment: oklch(0.97 0.02 82);      /* pergaminho */
-  --ink: oklch(0.2 0.03 30);
+  --ink: oklch(0.15 0.03 30);
 
   --background: var(--parchment);
   --foreground: var(--ink);
@@ -85,13 +86,13 @@
   --secondary: oklch(0.93 0.03 82);
   --secondary-foreground: var(--ink);
   --muted: oklch(0.94 0.02 82);
-  --muted-foreground: oklch(0.45 0.03 30);
+  --muted-foreground: oklch(0.34 0.04 30);
   --accent: var(--gold);
   --accent-foreground: var(--gold-foreground);
   --destructive: oklch(0.55 0.22 27);
   --destructive-foreground: oklch(0.98 0.01 80);
-  --border: oklch(0.88 0.03 82);
-  --input: oklch(0.9 0.02 82);
+  --border: oklch(0.82 0.04 82);
+  --input: oklch(0.85 0.03 82);
   --ring: var(--gold);
   --chart-1: oklch(0.76 0.13 82);
   --chart-2: oklch(0.32 0.11 20);
@@ -120,7 +121,7 @@
   --secondary: oklch(0.28 0.07 20);
   --secondary-foreground: oklch(0.95 0.02 82);
   --muted: oklch(0.26 0.05 20);
-  --muted-foreground: oklch(0.75 0.04 82);
+  --muted-foreground: oklch(0.85 0.04 82);
   --accent: var(--gold);
   --accent-foreground: oklch(0.2 0.05 30);
   --destructive: oklch(0.65 0.2 27);
@@ -151,12 +152,20 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: var(--font-serif);
+    font-family: var(--font-sans);
+    font-weight: 450;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   h1, h2, h3, .font-display {
     font-family: var(--font-display);
     letter-spacing: 0.02em;
+  }
+
+  .font-serif {
+    font-family: var(--font-serif);
   }
 }
 
