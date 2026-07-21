@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, Copy, Eye, Loader2, Plus, Save, Sparkles, StopCircle, Trash2 } from "lucide-react";
+import { BookOpen, ChevronDown, Copy, Eye, Loader2, Plus, Save, Sparkles, StopCircle, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -272,11 +272,20 @@ function RoteirosPage() {
       </aside>
 
       <section className="mx-auto w-full max-w-3xl space-y-6">
-        <header className="space-y-1">
-          <h1 className="font-display text-4xl text-primary md:text-5xl">Roteiros</h1>
-          <p className="text-base text-muted-foreground">
-            Gancho, citação de santo, aplicação e chamada — gerados via streaming.
-          </p>
+        <header className="relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-card/80 via-card/60 to-transparent p-7 shadow-sm backdrop-blur">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
+          <div className="relative space-y-3">
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium uppercase tracking-wider text-primary">
+              <BookOpen className="h-3.5 w-3.5" /> Irmão Gabriel · Direção espiritual
+            </span>
+            <h1 className="font-display text-4xl leading-tight text-primary md:text-5xl">
+              Roteiros
+            </h1>
+            <p className="max-w-xl text-base leading-relaxed text-muted-foreground">
+              Gancho, citação de santo ou versículo, aplicação prática e chamada final —
+              gerados via streaming no tom sereno do Irmão Gabriel para o canal Catolicoteca.
+            </p>
+          </div>
         </header>
 
         <div className="grid gap-5 rounded-2xl border border-border bg-card/70 p-6 shadow-sm backdrop-blur md:grid-cols-2">
