@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState } from "react";
-import { Loader2, Plus, Save, Sparkles, Trash2, StopCircle } from "lucide-react";
+import { ChevronDown, Copy, Eye, Loader2, Plus, Save, Sparkles, StopCircle, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ import {
   listScripts,
   saveScript,
 } from "@/lib/scripts.functions";
+import { SCRIPT_SYSTEM_PROMPT, buildScriptPrompt } from "@/lib/scripts.prompt";
 
 export const Route = createFileRoute("/_authenticated/app/roteiros")({
   component: RoteirosPage,
@@ -48,6 +49,7 @@ function RoteirosPage() {
   const [duration, setDuration] = useState(55);
   const [content, setContent] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
   function loadScript(s: ScriptRow) {
@@ -68,6 +70,23 @@ function RoteirosPage() {
     setFormat("short");
     setDuration(55);
     setContent("");
+  }
+
+  const previewUserPrompt = buildScriptPrompt({
+    topic: topic.trim(),
+    saint: saint.trim() || undefined,
+    format,
+    duration,
+  });
+
+  async function copyPreview() {
+    const full = `SYSTEM:\n${SCRIPT_SYSTEM_PROMPT}\n\nUSER:\n${previewUserPrompt}`;
+    try {
+      await navigator.clipboard.writeText(full);
+      toast.success("Prompt copiado.");
+    } catch {
+      toast.error("Não foi possível copiar.");
+    }
   }
 
   async function generate() {
@@ -304,6 +323,53 @@ function RoteirosPage() {
               </Button>
             )}
           </div>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card/60">
+          <button
+            type="button"
+            onClick={() => setShowPreview((v) => !v)}
+            className="flex w-full items-center justify-between gap-2 px-5 py-3 text-left"
+          >
+            <span className="inline-flex items-center gap-2 text-sm font-medium text-primary">
+              <Eye className="h-4 w-4" /> Prévia do prompt enviado à IA
+            </span>
+            <ChevronDown
+              className={`h-4 w-4 text-muted-foreground transition-transform ${
+                showPreview ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+          {showPreview && (
+            <div className="space-y-4 border-t border-border px-5 py-4">
+              <p className="text-xs text-muted-foreground">
+                Este é o conteúdo exato enviado ao modelo <code>google/gemini-3.5-flash</code>{" "}
+                quando você clica em <em>Gerar roteiro</em>. Ajuste tema, santo, formato ou
+                duração acima para ver a atualização.
+              </p>
+              <div className="space-y-1">
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+                  System
+                </Label>
+                <pre className="whitespace-pre-wrap rounded-md bg-secondary/40 p-3 font-mono text-xs leading-relaxed text-foreground">
+                  {SCRIPT_SYSTEM_PROMPT}
+                </pre>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+                  User
+                </Label>
+                <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-md bg-secondary/40 p-3 font-mono text-xs leading-relaxed text-foreground">
+                  {previewUserPrompt}
+                </pre>
+              </div>
+              <div className="flex justify-end">
+                <Button size="sm" variant="secondary" onClick={copyPreview}>
+                  <Copy className="mr-2 h-4 w-4" /> Copiar prompt completo
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
