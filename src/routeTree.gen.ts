@@ -22,6 +22,7 @@ import { Route as AuthenticatedAppRoteirosRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppPublicacaoRouteImport } from './routes/_authenticated/app.publicacao'
 import { Route as AuthenticatedAppMusicasRouteImport } from './routes/_authenticated/app.musicas'
 import { Route as AuthenticatedAppMontagemRouteImport } from './routes/_authenticated/app.montagem'
+import { Route as AuthenticatedAppImagensRouteImport } from './routes/_authenticated/app.imagens'
 import { Route as AuthenticatedAppConfiguracoesRouteImport } from './routes/_authenticated/app.configuracoes'
 import { Route as AuthenticatedAppAudioRouteImport } from './routes/_authenticated/app.audio'
 import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
@@ -94,6 +95,11 @@ const AuthenticatedAppMontagemRoute =
     path: '/montagem',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppImagensRoute = AuthenticatedAppImagensRouteImport.update({
+  id: '/imagens',
+  path: '/imagens',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppConfiguracoesRoute =
   AuthenticatedAppConfiguracoesRouteImport.update({
     id: '/configuracoes',
@@ -127,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/audio': typeof AuthenticatedAppAudioRoute
   '/app/configuracoes': typeof AuthenticatedAppConfiguracoesRoute
+  '/app/imagens': typeof AuthenticatedAppImagensRoute
   '/app/montagem': typeof AuthenticatedAppMontagemRoute
   '/app/musicas': typeof AuthenticatedAppMusicasRoute
   '/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
@@ -144,6 +151,7 @@ export interface FileRoutesByTo {
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/audio': typeof AuthenticatedAppAudioRoute
   '/app/configuracoes': typeof AuthenticatedAppConfiguracoesRoute
+  '/app/imagens': typeof AuthenticatedAppImagensRoute
   '/app/montagem': typeof AuthenticatedAppMontagemRoute
   '/app/musicas': typeof AuthenticatedAppMusicasRoute
   '/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   '/_authenticated/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/_authenticated/app/audio': typeof AuthenticatedAppAudioRoute
   '/_authenticated/app/configuracoes': typeof AuthenticatedAppConfiguracoesRoute
+  '/_authenticated/app/imagens': typeof AuthenticatedAppImagensRoute
   '/_authenticated/app/montagem': typeof AuthenticatedAppMontagemRoute
   '/_authenticated/app/musicas': typeof AuthenticatedAppMusicasRoute
   '/_authenticated/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
@@ -184,6 +193,7 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/audio'
     | '/app/configuracoes'
+    | '/app/imagens'
     | '/app/montagem'
     | '/app/musicas'
     | '/app/publicacao'
@@ -201,6 +211,7 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/audio'
     | '/app/configuracoes'
+    | '/app/imagens'
     | '/app/montagem'
     | '/app/musicas'
     | '/app/publicacao'
@@ -220,6 +231,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/analytics'
     | '/_authenticated/app/audio'
     | '/_authenticated/app/configuracoes'
+    | '/_authenticated/app/imagens'
     | '/_authenticated/app/montagem'
     | '/_authenticated/app/musicas'
     | '/_authenticated/app/publicacao'
@@ -331,6 +343,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppMontagemRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/imagens': {
+      id: '/_authenticated/app/imagens'
+      path: '/imagens'
+      fullPath: '/app/imagens'
+      preLoaderRoute: typeof AuthenticatedAppImagensRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/configuracoes': {
       id: '/_authenticated/app/configuracoes'
       path: '/configuracoes'
@@ -367,6 +386,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAnalyticsRoute: typeof AuthenticatedAppAnalyticsRoute
   AuthenticatedAppAudioRoute: typeof AuthenticatedAppAudioRoute
   AuthenticatedAppConfiguracoesRoute: typeof AuthenticatedAppConfiguracoesRoute
+  AuthenticatedAppImagensRoute: typeof AuthenticatedAppImagensRoute
   AuthenticatedAppMontagemRoute: typeof AuthenticatedAppMontagemRoute
   AuthenticatedAppMusicasRoute: typeof AuthenticatedAppMusicasRoute
   AuthenticatedAppPublicacaoRoute: typeof AuthenticatedAppPublicacaoRoute
@@ -379,6 +399,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppAnalyticsRoute: AuthenticatedAppAnalyticsRoute,
   AuthenticatedAppAudioRoute: AuthenticatedAppAudioRoute,
   AuthenticatedAppConfiguracoesRoute: AuthenticatedAppConfiguracoesRoute,
+  AuthenticatedAppImagensRoute: AuthenticatedAppImagensRoute,
   AuthenticatedAppMontagemRoute: AuthenticatedAppMontagemRoute,
   AuthenticatedAppMusicasRoute: AuthenticatedAppMusicasRoute,
   AuthenticatedAppPublicacaoRoute: AuthenticatedAppPublicacaoRoute,
