@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
+import { Route as ApiScriptsStreamRouteImport } from './routes/api/scripts.stream'
 import { Route as AuthenticatedAppRoteirosRouteImport } from './routes/_authenticated/app.roteiros'
 import { Route as AuthenticatedAppPublicacaoRouteImport } from './routes/_authenticated/app.publicacao'
 import { Route as AuthenticatedAppMusicasRouteImport } from './routes/_authenticated/app.musicas'
@@ -59,6 +60,11 @@ const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const ApiScriptsStreamRoute = ApiScriptsStreamRouteImport.update({
+  id: '/api/scripts/stream',
+  path: '/api/scripts/stream',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppRoteirosRoute =
   AuthenticatedAppRoteirosRouteImport.update({
@@ -126,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/app/musicas': typeof AuthenticatedAppMusicasRoute
   '/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
   '/app/roteiros': typeof AuthenticatedAppRoteirosRoute
+  '/api/scripts/stream': typeof ApiScriptsStreamRoute
   '/app/': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRoutesByTo {
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/app/musicas': typeof AuthenticatedAppMusicasRoute
   '/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
   '/app/roteiros': typeof AuthenticatedAppRoteirosRoute
+  '/api/scripts/stream': typeof ApiScriptsStreamRoute
   '/app': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRoutesById {
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/_authenticated/app/musicas': typeof AuthenticatedAppMusicasRoute
   '/_authenticated/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
   '/_authenticated/app/roteiros': typeof AuthenticatedAppRoteirosRoute
+  '/api/scripts/stream': typeof ApiScriptsStreamRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRouteTypes {
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/app/musicas'
     | '/app/publicacao'
     | '/app/roteiros'
+    | '/api/scripts/stream'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/app/musicas'
     | '/app/publicacao'
     | '/app/roteiros'
+    | '/api/scripts/stream'
     | '/app'
   id:
     | '__root__'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/musicas'
     | '/_authenticated/app/publicacao'
     | '/_authenticated/app/roteiros'
+    | '/api/scripts/stream'
     | '/_authenticated/app/'
   fileRoutesById: FileRoutesById
 }
@@ -222,6 +234,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiScriptsStreamRoute: typeof ApiScriptsStreamRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -274,6 +287,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/'
       preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/api/scripts/stream': {
+      id: '/api/scripts/stream'
+      path: '/api/scripts/stream'
+      fullPath: '/api/scripts/stream'
+      preLoaderRoute: typeof ApiScriptsStreamRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/app/roteiros': {
       id: '/_authenticated/app/roteiros'
@@ -396,6 +416,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiScriptsStreamRoute: ApiScriptsStreamRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
