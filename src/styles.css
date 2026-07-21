@@ -152,12 +152,20 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: var(--font-serif);
+    font-family: var(--font-sans);
+    font-weight: 450;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   h1, h2, h3, .font-display {
     font-family: var(--font-display);
     letter-spacing: 0.02em;
+  }
+
+  .font-serif {
+    font-family: var(--font-serif);
   }
 }
 
