@@ -23,7 +23,14 @@ export const Route = createFileRoute("/_authenticated/app")({
   component: AppShell,
 });
 
-const NAV = [
+type NavItem = {
+  to: "/app" | "/app/roteiros" | "/app/audio" | "/app/imagens" | "/app/musicas" | "/app/montagem" | "/app/publicacao" | "/app/agenda" | "/app/configuracoes";
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+};
+
+const NAV: readonly NavItem[] = [
   { to: "/app", label: "Painel", icon: LayoutDashboard, exact: true },
   { to: "/app/roteiros", label: "Roteiros", icon: BookOpen },
   { to: "/app/audio", label: "Áudio", icon: Mic },
@@ -33,7 +40,7 @@ const NAV = [
   { to: "/app/publicacao", label: "Publicação", icon: Youtube },
   { to: "/app/agenda", label: "Agenda", icon: Calendar },
   { to: "/app/configuracoes", label: "Configurações", icon: Settings },
-] as const;
+];
 
 function AppShell() {
   const navigate = useNavigate();
@@ -79,7 +86,7 @@ function AppShell() {
             <Link
               key={item.to}
               to={item.to}
-              activeOptions={{ exact: item.exact }}
+              activeOptions={{ exact: item.exact ?? false }}
               className="group flex items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground/80 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground [&.active]:bg-sidebar-accent [&.active]:text-sidebar-primary"
             >
               <item.icon className="h-4 w-4" />
