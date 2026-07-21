@@ -46,9 +46,10 @@ function AudioPage() {
 
   const [scriptId, setScriptId] = useState<string>("");
   const [title, setTitle] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   function pickScript(id: string) {
@@ -57,9 +58,16 @@ function AudioPage() {
     if (s && !title) setTitle(s.title);
   }
 
-  function onFileChange(f: File | null) {
-    setFile(f);
-    if (f && !title) setTitle(f.name.replace(/\.[^.]+$/, ""));
+  function onFilesChange(list: FileList | null) {
+    const arr = list ? Array.from(list) : [];
+    setFiles(arr);
+    if (arr.length === 1 && !title) {
+      setTitle(arr[0].name.replace(/\.[^.]+$/, ""));
+    }
+  }
+
+  function removeFileAt(idx: number) {
+    setFiles((prev) => prev.filter((_, i) => i !== idx));
   }
 
   async function getAudioDuration(f: File): Promise<number | null> {
@@ -81,12 +89,8 @@ function AudioPage() {
   }
 
   async function upload() {
-    if (!file) {
-      toast.error("Selecione um arquivo de áudio.");
-      return;
-    }
-    if (!title.trim()) {
-      toast.error("Informe um título.");
+    if (files.length === 0) {
+      toast.error("Selecione ao menos um arquivo de áudio.");
       return;
     }
     const { data: sess } = await supabase.auth.getUser();
@@ -96,42 +100,58 @@ function AudioPage() {
       return;
     }
     setUploading(true);
-    setProgress(10);
+    setProgress(0);
+    setCurrentIndex(0);
+    let ok = 0;
+    let fail = 0;
     try {
-      const ext = (file.name.split(".").pop() || "mp3").toLowerCase();
-      const path = `${userId}/${crypto.randomUUID()}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("audio")
-        .upload(path, file, {
-          contentType: file.type || "audio/mpeg",
-          upsert: false,
-        });
-      if (upErr) throw new Error(upErr.message);
-      setProgress(70);
-      const duration = await getAudioDuration(file);
-      setProgress(85);
-      await save({
-        data: {
-          title: title.trim(),
-          storage_path: path,
-          format: ext,
-          size_bytes: file.size,
-          duration_seconds: duration,
-          script_id: scriptId || null,
-        },
-      });
-      setProgress(100);
-      toast.success("Áudio enviado.");
-      setFile(null);
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        setCurrentIndex(i + 1);
+        try {
+          const ext = (f.name.split(".").pop() || "mp3").toLowerCase();
+          const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+          const { error: upErr } = await supabase.storage
+            .from("audio")
+            .upload(path, f, {
+              contentType: f.type || "audio/mpeg",
+              upsert: false,
+            });
+          if (upErr) throw new Error(upErr.message);
+          const duration = await getAudioDuration(f);
+          const itemTitle =
+            files.length === 1 && title.trim()
+              ? title.trim()
+              : f.name.replace(/\.[^.]+$/, "");
+          await save({
+            data: {
+              title: itemTitle,
+              storage_path: path,
+              format: ext,
+              size_bytes: f.size,
+              duration_seconds: duration,
+              script_id: scriptId || null,
+            },
+          });
+          ok++;
+        } catch (err) {
+          fail++;
+          toast.error(`${f.name}: ${(err as Error).message || "falha"}`);
+        }
+        setProgress(Math.round(((i + 1) / files.length) * 100));
+      }
+      if (ok > 0) toast.success(`${ok} áudio(s) enviado(s).${fail ? ` ${fail} falharam.` : ""}`);
+      setFiles([]);
       setTitle("");
       setScriptId("");
       if (inputRef.current) inputRef.current.value = "";
       qc.invalidateQueries({ queryKey: ["audio_assets"] });
-    } catch (err) {
-      toast.error((err as Error).message || "Falha no upload.");
     } finally {
       setUploading(false);
-      setTimeout(() => setProgress(0), 500);
+      setTimeout(() => {
+        setProgress(0);
+        setCurrentIndex(0);
+      }, 600);
     }
   }
 
@@ -174,41 +194,66 @@ function AudioPage() {
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="title">Título</Label>
+          <Label htmlFor="title">
+            Título {files.length > 1 && <span className="text-xs text-muted-foreground">(ignorado — usa o nome de cada arquivo)</span>}
+          </Label>
           <Input
             id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Ex.: Narração — Humildade"
+            disabled={files.length > 1}
           />
         </div>
         <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="file">Arquivo de áudio</Label>
+          <Label htmlFor="file">Arquivos de áudio (você pode selecionar vários)</Label>
           <Input
             id="file"
             ref={inputRef}
             type="file"
+            multiple
             accept={ACCEPT}
-            onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
+            onChange={(e) => onFilesChange(e.target.files)}
           />
-          {file && (
-            <p className="text-xs text-muted-foreground">
-              {file.name} · {(file.size / 1024 / 1024).toFixed(2)} MB
-            </p>
+          {files.length > 0 && (
+            <ul className="mt-1 space-y-1 rounded-md border border-border/60 bg-background/40 p-2 text-xs">
+              {files.map((f, i) => (
+                <li key={`${f.name}-${i}`} className="flex items-center justify-between gap-2">
+                  <span className="truncate">
+                    {f.name} · {(f.size / 1024 / 1024).toFixed(2)} MB
+                  </span>
+                  {!uploading && (
+                    <button
+                      type="button"
+                      onClick={() => removeFileAt(i)}
+                      className="text-muted-foreground hover:text-destructive"
+                      aria-label={`Remover ${f.name}`}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
           )}
         </div>
         <div className="md:col-span-2">
           {uploading && (
-            <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-secondary">
-              <div
-                className="h-full bg-primary transition-all"
-                style={{ width: `${progress}%` }}
-              />
+            <div className="mb-3 space-y-1">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+                <div
+                  className="h-full bg-primary transition-all"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Enviando {currentIndex} de {files.length}…
+              </p>
             </div>
           )}
           <Button
             onClick={upload}
-            disabled={uploading || !file}
+            disabled={uploading || files.length === 0}
             className="bg-primary text-primary-foreground"
           >
             {uploading ? (
@@ -216,7 +261,7 @@ function AudioPage() {
             ) : (
               <Upload className="mr-2 h-4 w-4" />
             )}
-            Enviar áudio
+            {files.length > 1 ? `Enviar ${files.length} áudios` : "Enviar áudio"}
           </Button>
         </div>
       </div>
