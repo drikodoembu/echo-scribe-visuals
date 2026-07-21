@@ -29,3 +29,29 @@ IMAGENS: ${imgCount} prompts numerados (1., 2., ...), em INGLÊS, prontos para g
 
 Tom: reverente, direto, sem clichês. Sem emojis. Sem hashtags. Retorne apenas o texto seguindo a estrutura acima, na ordem indicada.`;
 }
+
+export interface ParsedScript {
+  narration: string;
+  imagePrompts: string[];
+}
+
+/**
+ * Splits AI output into the narratable script (everything before the IMAGENS: section)
+ * and the numbered image prompts that follow.
+ */
+export function parseScript(raw: string): ParsedScript {
+  if (!raw) return { narration: "", imagePrompts: [] };
+  const match = raw.match(/^\s*IMAGENS\s*:\s*/im);
+  if (!match || match.index === undefined) {
+    return { narration: raw.trim(), imagePrompts: [] };
+  }
+  const narration = raw.slice(0, match.index).trim();
+  const after = raw.slice(match.index + match[0].length).trim();
+  const prompts = after
+    .split(/\n+/)
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .map((l) => l.replace(/^\d+[.)\-]\s*/, "").trim())
+    .filter(Boolean);
+  return { narration, imagePrompts: prompts };
+}
