@@ -125,6 +125,51 @@ export type Database = {
         }
         Relationships: []
       }
+      scripts: {
+        Row: {
+          content: string
+          created_at: string
+          duration_seconds: number
+          format: string
+          id: string
+          model: string | null
+          saint: string | null
+          status: string
+          title: string
+          topic: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          duration_seconds?: number
+          format?: string
+          id?: string
+          model?: string | null
+          saint?: string | null
+          status?: string
+          title: string
+          topic: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          duration_seconds?: number
+          format?: string
+          id?: string
+          model?: string | null
+          saint?: string | null
+          status?: string
+          title?: string
+          topic?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
