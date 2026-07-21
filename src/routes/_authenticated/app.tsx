@@ -51,9 +51,14 @@ function AppShell() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
     const stored = typeof window !== "undefined" ? localStorage.getItem("theme") : null;
-    if (stored === "dark") {
+    // Dark por padrão; usuário pode alternar para claro.
+    const useDark = stored ? stored === "dark" : true;
+    if (useDark) {
       document.documentElement.classList.add("dark");
       setDark(true);
+    } else {
+      document.documentElement.classList.remove("dark");
+      setDark(false);
     }
   }, []);
 
