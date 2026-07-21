@@ -136,6 +136,7 @@ export type Database = {
           height: number | null
           id: string
           mime_type: string | null
+          scene_order: number | null
           script_id: string | null
           size_bytes: number | null
           storage_path: string
@@ -149,6 +150,7 @@ export type Database = {
           height?: number | null
           id?: string
           mime_type?: string | null
+          scene_order?: number | null
           script_id?: string | null
           size_bytes?: number | null
           storage_path: string
@@ -162,6 +164,7 @@ export type Database = {
           height?: number | null
           id?: string
           mime_type?: string | null
+          scene_order?: number | null
           script_id?: string | null
           size_bytes?: number | null
           storage_path?: string
@@ -179,6 +182,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      music_tracks: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          format: string | null
+          id: string
+          size_bytes: number | null
+          storage_path: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          format?: string | null
+          id?: string
+          size_bytes?: number | null
+          storage_path: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          format?: string | null
+          id?: string
+          size_bytes?: number | null
+          storage_path?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
