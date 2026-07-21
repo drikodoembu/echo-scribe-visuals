@@ -17,7 +17,14 @@ import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppRoteirosRouteImport } from './routes/_authenticated/app.roteiros'
+import { Route as AuthenticatedAppPublicacaoRouteImport } from './routes/_authenticated/app.publicacao'
+import { Route as AuthenticatedAppMusicasRouteImport } from './routes/_authenticated/app.musicas'
+import { Route as AuthenticatedAppMontagemRouteImport } from './routes/_authenticated/app.montagem'
+import { Route as AuthenticatedAppImagensRouteImport } from './routes/_authenticated/app.imagens'
 import { Route as AuthenticatedAppConfiguracoesRouteImport } from './routes/_authenticated/app.configuracoes'
+import { Route as AuthenticatedAppAudioRouteImport } from './routes/_authenticated/app.audio'
+import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
+import { Route as AuthenticatedAppAgendaRouteImport } from './routes/_authenticated/app.agenda'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -59,12 +66,50 @@ const AuthenticatedAppRoteirosRoute =
     path: '/roteiros',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppPublicacaoRoute =
+  AuthenticatedAppPublicacaoRouteImport.update({
+    id: '/publicacao',
+    path: '/publicacao',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppMusicasRoute = AuthenticatedAppMusicasRouteImport.update({
+  id: '/musicas',
+  path: '/musicas',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppMontagemRoute =
+  AuthenticatedAppMontagemRouteImport.update({
+    id: '/montagem',
+    path: '/montagem',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppImagensRoute = AuthenticatedAppImagensRouteImport.update({
+  id: '/imagens',
+  path: '/imagens',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppConfiguracoesRoute =
   AuthenticatedAppConfiguracoesRouteImport.update({
     id: '/configuracoes',
     path: '/configuracoes',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppAudioRoute = AuthenticatedAppAudioRouteImport.update({
+  id: '/audio',
+  path: '/audio',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppAnalyticsRoute =
+  AuthenticatedAppAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppAgendaRoute = AuthenticatedAppAgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -72,7 +117,14 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/app/agenda': typeof AuthenticatedAppAgendaRoute
+  '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
+  '/app/audio': typeof AuthenticatedAppAudioRoute
   '/app/configuracoes': typeof AuthenticatedAppConfiguracoesRoute
+  '/app/imagens': typeof AuthenticatedAppImagensRoute
+  '/app/montagem': typeof AuthenticatedAppMontagemRoute
+  '/app/musicas': typeof AuthenticatedAppMusicasRoute
+  '/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
   '/app/roteiros': typeof AuthenticatedAppRoteirosRoute
   '/app/': typeof AuthenticatedAppIndexRoute
 }
@@ -81,7 +133,14 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/app/agenda': typeof AuthenticatedAppAgendaRoute
+  '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
+  '/app/audio': typeof AuthenticatedAppAudioRoute
   '/app/configuracoes': typeof AuthenticatedAppConfiguracoesRoute
+  '/app/imagens': typeof AuthenticatedAppImagensRoute
+  '/app/montagem': typeof AuthenticatedAppMontagemRoute
+  '/app/musicas': typeof AuthenticatedAppMusicasRoute
+  '/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
   '/app/roteiros': typeof AuthenticatedAppRoteirosRoute
   '/app': typeof AuthenticatedAppIndexRoute
 }
@@ -93,7 +152,14 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/_authenticated/app/agenda': typeof AuthenticatedAppAgendaRoute
+  '/_authenticated/app/analytics': typeof AuthenticatedAppAnalyticsRoute
+  '/_authenticated/app/audio': typeof AuthenticatedAppAudioRoute
   '/_authenticated/app/configuracoes': typeof AuthenticatedAppConfiguracoesRoute
+  '/_authenticated/app/imagens': typeof AuthenticatedAppImagensRoute
+  '/_authenticated/app/montagem': typeof AuthenticatedAppMontagemRoute
+  '/_authenticated/app/musicas': typeof AuthenticatedAppMusicasRoute
+  '/_authenticated/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
   '/_authenticated/app/roteiros': typeof AuthenticatedAppRoteirosRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
 }
@@ -105,7 +171,14 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/app'
     | '/auth/callback'
+    | '/app/agenda'
+    | '/app/analytics'
+    | '/app/audio'
     | '/app/configuracoes'
+    | '/app/imagens'
+    | '/app/montagem'
+    | '/app/musicas'
+    | '/app/publicacao'
     | '/app/roteiros'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
@@ -114,7 +187,14 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/auth/callback'
+    | '/app/agenda'
+    | '/app/analytics'
+    | '/app/audio'
     | '/app/configuracoes'
+    | '/app/imagens'
+    | '/app/montagem'
+    | '/app/musicas'
+    | '/app/publicacao'
     | '/app/roteiros'
     | '/app'
   id:
@@ -125,7 +205,14 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/_authenticated/app'
     | '/auth/callback'
+    | '/_authenticated/app/agenda'
+    | '/_authenticated/app/analytics'
+    | '/_authenticated/app/audio'
     | '/_authenticated/app/configuracoes'
+    | '/_authenticated/app/imagens'
+    | '/_authenticated/app/montagem'
+    | '/_authenticated/app/musicas'
+    | '/_authenticated/app/publicacao'
     | '/_authenticated/app/roteiros'
     | '/_authenticated/app/'
   fileRoutesById: FileRoutesById
@@ -195,6 +282,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRoteirosRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/publicacao': {
+      id: '/_authenticated/app/publicacao'
+      path: '/publicacao'
+      fullPath: '/app/publicacao'
+      preLoaderRoute: typeof AuthenticatedAppPublicacaoRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/musicas': {
+      id: '/_authenticated/app/musicas'
+      path: '/musicas'
+      fullPath: '/app/musicas'
+      preLoaderRoute: typeof AuthenticatedAppMusicasRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/montagem': {
+      id: '/_authenticated/app/montagem'
+      path: '/montagem'
+      fullPath: '/app/montagem'
+      preLoaderRoute: typeof AuthenticatedAppMontagemRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/imagens': {
+      id: '/_authenticated/app/imagens'
+      path: '/imagens'
+      fullPath: '/app/imagens'
+      preLoaderRoute: typeof AuthenticatedAppImagensRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/configuracoes': {
       id: '/_authenticated/app/configuracoes'
       path: '/configuracoes'
@@ -202,17 +317,52 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppConfiguracoesRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/audio': {
+      id: '/_authenticated/app/audio'
+      path: '/audio'
+      fullPath: '/app/audio'
+      preLoaderRoute: typeof AuthenticatedAppAudioRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/analytics': {
+      id: '/_authenticated/app/analytics'
+      path: '/analytics'
+      fullPath: '/app/analytics'
+      preLoaderRoute: typeof AuthenticatedAppAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/agenda': {
+      id: '/_authenticated/app/agenda'
+      path: '/agenda'
+      fullPath: '/app/agenda'
+      preLoaderRoute: typeof AuthenticatedAppAgendaRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
   }
 }
 
 interface AuthenticatedAppRouteChildren {
+  AuthenticatedAppAgendaRoute: typeof AuthenticatedAppAgendaRoute
+  AuthenticatedAppAnalyticsRoute: typeof AuthenticatedAppAnalyticsRoute
+  AuthenticatedAppAudioRoute: typeof AuthenticatedAppAudioRoute
   AuthenticatedAppConfiguracoesRoute: typeof AuthenticatedAppConfiguracoesRoute
+  AuthenticatedAppImagensRoute: typeof AuthenticatedAppImagensRoute
+  AuthenticatedAppMontagemRoute: typeof AuthenticatedAppMontagemRoute
+  AuthenticatedAppMusicasRoute: typeof AuthenticatedAppMusicasRoute
+  AuthenticatedAppPublicacaoRoute: typeof AuthenticatedAppPublicacaoRoute
   AuthenticatedAppRoteirosRoute: typeof AuthenticatedAppRoteirosRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
+  AuthenticatedAppAgendaRoute: AuthenticatedAppAgendaRoute,
+  AuthenticatedAppAnalyticsRoute: AuthenticatedAppAnalyticsRoute,
+  AuthenticatedAppAudioRoute: AuthenticatedAppAudioRoute,
   AuthenticatedAppConfiguracoesRoute: AuthenticatedAppConfiguracoesRoute,
+  AuthenticatedAppImagensRoute: AuthenticatedAppImagensRoute,
+  AuthenticatedAppMontagemRoute: AuthenticatedAppMontagemRoute,
+  AuthenticatedAppMusicasRoute: AuthenticatedAppMusicasRoute,
+  AuthenticatedAppPublicacaoRoute: AuthenticatedAppPublicacaoRoute,
   AuthenticatedAppRoteirosRoute: AuthenticatedAppRoteirosRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
 }
