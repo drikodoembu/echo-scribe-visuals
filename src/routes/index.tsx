@@ -2,6 +2,40 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Cross, Sparkles, Youtube, Wand2 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Catolicoteca Auto Creator · Estúdio católico de conteúdo com IA" },
+      {
+        name: "description",
+        content:
+          "Crie roteiros com citações de santos, narração, imagens sacras, trilha e monte vídeos Shorts e longos direto no navegador. Publique no YouTube em um só fluxo.",
+      },
+      { name: "keywords", content: "conteúdo católico, YouTube católico, roteiro católico, Shorts católicos, IA católica, Catolicoteca, canal católico" },
+      { property: "og:title", content: "Catolicoteca Auto Creator · Estúdio católico com IA" },
+      { property: "og:description", content: "Do sopro do Espírito ao Shorts publicado — roteiro, áudio, imagem, montagem e publicação no YouTube." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "/" },
+      { name: "twitter:title", content: "Catolicoteca Auto Creator" },
+      { name: "twitter:description", content: "Estúdio católico completo: roteiro, mídia e publicação no YouTube com IA." },
+    ],
+    links: [{ rel: "canonical", href: "/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "Catolicoteca Auto Creator",
+          applicationCategory: "MultimediaApplication",
+          operatingSystem: "Web",
+          inLanguage: "pt-BR",
+          description:
+            "Estúdio católico de conteúdo com IA para criar roteiros, áudio, imagens, montagem e publicação no YouTube.",
+          offers: { "@type": "Offer", price: "0", priceCurrency: "BRL" },
+        }),
+      },
+    ],
+  }),
   component: Landing,
 });
 

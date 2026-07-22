@@ -80,10 +80,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Catolicoteca Auto Creator" },
       { name: "description", content: "Estúdio católico de conteúdo: roteiro, áudio, imagem, montagem e publicação no YouTube em um só lugar." },
       { name: "author", content: "Catolicoteca" },
+      { name: "robots", content: "index, follow" },
+      { name: "theme-color", content: "#2b0a12" },
+      { property: "og:site_name", content: "Catolicoteca Auto Creator" },
+      { property: "og:locale", content: "pt_BR" },
       { property: "og:title", content: "Catolicoteca Auto Creator" },
       { property: "og:description", content: "Estúdio católico de conteúdo com IA — do roteiro à publicação no YouTube." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Catolicoteca Auto Creator" },
+      { name: "twitter:description", content: "Estúdio católico de conteúdo com IA — do roteiro à publicação no YouTube." },
     ],
     links: [
       {
@@ -96,6 +102,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap",
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Catolicoteca Auto Creator",
+          description:
+            "Estúdio católico de criação de conteúdo com IA para YouTube.",
+          inLanguage: "pt-BR",
+        }),
       },
     ],
   }),
