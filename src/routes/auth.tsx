@@ -17,7 +17,12 @@ export const Route = createFileRoute("/auth")({
     meta: [
       { title: "Entrar · Catolicoteca Auto Creator" },
       { name: "description", content: "Acesse seu estúdio católico de conteúdo." },
+      { name: "robots", content: "noindex, nofollow" },
+      { property: "og:title", content: "Entrar · Catolicoteca Auto Creator" },
+      { property: "og:description", content: "Acesse seu estúdio católico de conteúdo." },
+      { property: "og:url", content: "/auth" },
     ],
+    links: [{ rel: "canonical", href: "/auth" }],
   }),
   component: AuthPage,
 });
