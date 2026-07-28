@@ -104,7 +104,9 @@ function MontagemPage() {
         setLog((l) => (l + "\n" + message).slice(-8000));
       });
       ffmpeg.on("progress", ({ progress }) => {
-        setRenderProgress(Math.min(99, Math.round(progress * 100)));
+        const { base, span } = progressWindow.current;
+        const p = Math.max(0, Math.min(1, progress));
+        setRenderProgress(Math.min(99, Math.round(base + p * span)));
       });
       // Same-origin ESM core (module workers cannot import cross-origin scripts).
       const wasmAsset = (await fetch("/ffmpeg/ffmpeg-core.wasm.asset.json").then((r) =>
