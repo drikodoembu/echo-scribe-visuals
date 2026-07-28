@@ -17,6 +17,7 @@ import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as ApiScriptsStreamRouteImport } from './routes/api/scripts.stream'
+import { Route as ApiImagesGenerateRouteImport } from './routes/api/images.generate'
 import { Route as ApiAudioGenerateRouteImport } from './routes/api/audio.generate'
 import { Route as AuthenticatedAppRoteirosRouteImport } from './routes/_authenticated/app.roteiros'
 import { Route as AuthenticatedAppPublicacaoRouteImport } from './routes/_authenticated/app.publicacao'
@@ -65,6 +66,11 @@ const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
 const ApiScriptsStreamRoute = ApiScriptsStreamRouteImport.update({
   id: '/api/scripts/stream',
   path: '/api/scripts/stream',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiImagesGenerateRoute = ApiImagesGenerateRouteImport.update({
+  id: '/api/images/generate',
+  path: '/api/images/generate',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAudioGenerateRoute = ApiAudioGenerateRouteImport.update({
@@ -139,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
   '/app/roteiros': typeof AuthenticatedAppRoteirosRoute
   '/api/audio/generate': typeof ApiAudioGenerateRoute
+  '/api/images/generate': typeof ApiImagesGenerateRoute
   '/api/scripts/stream': typeof ApiScriptsStreamRoute
   '/app/': typeof AuthenticatedAppIndexRoute
 }
@@ -157,6 +164,7 @@ export interface FileRoutesByTo {
   '/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
   '/app/roteiros': typeof AuthenticatedAppRoteirosRoute
   '/api/audio/generate': typeof ApiAudioGenerateRoute
+  '/api/images/generate': typeof ApiImagesGenerateRoute
   '/api/scripts/stream': typeof ApiScriptsStreamRoute
   '/app': typeof AuthenticatedAppIndexRoute
 }
@@ -178,6 +186,7 @@ export interface FileRoutesById {
   '/_authenticated/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
   '/_authenticated/app/roteiros': typeof AuthenticatedAppRoteirosRoute
   '/api/audio/generate': typeof ApiAudioGenerateRoute
+  '/api/images/generate': typeof ApiImagesGenerateRoute
   '/api/scripts/stream': typeof ApiScriptsStreamRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
 }
@@ -199,6 +208,7 @@ export interface FileRouteTypes {
     | '/app/publicacao'
     | '/app/roteiros'
     | '/api/audio/generate'
+    | '/api/images/generate'
     | '/api/scripts/stream'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
@@ -217,6 +227,7 @@ export interface FileRouteTypes {
     | '/app/publicacao'
     | '/app/roteiros'
     | '/api/audio/generate'
+    | '/api/images/generate'
     | '/api/scripts/stream'
     | '/app'
   id:
@@ -237,6 +248,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/publicacao'
     | '/_authenticated/app/roteiros'
     | '/api/audio/generate'
+    | '/api/images/generate'
     | '/api/scripts/stream'
     | '/_authenticated/app/'
   fileRoutesById: FileRoutesById
@@ -247,6 +259,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiAudioGenerateRoute: typeof ApiAudioGenerateRoute
+  ApiImagesGenerateRoute: typeof ApiImagesGenerateRoute
   ApiScriptsStreamRoute: typeof ApiScriptsStreamRoute
 }
 
@@ -306,6 +319,13 @@ declare module '@tanstack/react-router' {
       path: '/api/scripts/stream'
       fullPath: '/api/scripts/stream'
       preLoaderRoute: typeof ApiScriptsStreamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/images/generate': {
+      id: '/api/images/generate'
+      path: '/api/images/generate'
+      fullPath: '/api/images/generate'
+      preLoaderRoute: typeof ApiImagesGenerateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/audio/generate': {
@@ -437,18 +457,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiAudioGenerateRoute: ApiAudioGenerateRoute,
+  ApiImagesGenerateRoute: ApiImagesGenerateRoute,
   ApiScriptsStreamRoute: ApiScriptsStreamRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
