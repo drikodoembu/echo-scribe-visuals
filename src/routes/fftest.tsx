@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import coreURL from "@ffmpeg/core/dist/umd/ffmpeg-core.js?url";
-import wasmURL from "@ffmpeg/core/dist/umd/ffmpeg-core.wasm?url";
-import classWorkerURL from "@ffmpeg/ffmpeg/dist/umd/814.ffmpeg.js?url";
+const CDN="https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
+const coreURL=`${CDN}/ffmpeg-core.js`,wasmURL=`${CDN}/ffmpeg-core.wasm`,classWorkerURL="/ffmpeg/814.ffmpeg.js";
 
 export const Route = createFileRoute("/fftest")({ component: FF });
 
