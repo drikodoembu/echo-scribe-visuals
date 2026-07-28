@@ -53,6 +53,7 @@ function MontagemPage() {
   const [renderStage, setRenderStage] = useState<string>("");
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const logRef = useRef<HTMLPreElement | null>(null);
+  const progressWindow = useRef({ base: 0, span: 99 });
   const [log, setLog] = useState<string>("");
 
   const selectedAudio = audios.find((a) => a.id === audioId);
