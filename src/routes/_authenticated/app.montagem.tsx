@@ -107,9 +107,9 @@ function MontagemPage() {
         setRenderProgress(Math.min(99, Math.round(progress * 100)));
       });
       // Same-origin ESM core (module workers cannot import cross-origin scripts).
-      const wasmAsset = (await import("../../../public/ffmpeg/ffmpeg-core.wasm.asset.json")).default as {
-        url: string;
-      };
+      const wasmAsset = (await fetch("/ffmpeg/ffmpeg-core.wasm.asset.json").then((r) =>
+        r.json(),
+      )) as { url: string };
       await ffmpeg.load({
         coreURL: new URL("/ffmpeg/ffmpeg-core.js", window.location.origin).href,
         wasmURL: new URL(wasmAsset.url, window.location.origin).href,
