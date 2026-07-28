@@ -106,7 +106,8 @@ function MontagemPage() {
       ffmpeg.on("progress", ({ progress }) => {
         setRenderProgress(Math.min(99, Math.round(progress * 100)));
       });
-      const CORE = "https://unpkg.com/@ffmpeg/[email protected]/dist/umd";
+      // The worker is a module worker, so it must load the ESM build of the core.
+      const CORE = "https://unpkg.com/@ffmpeg/[email protected]/dist/esm";
       await ffmpeg.load({
         coreURL: `${CORE}/ffmpeg-core.js`,
         wasmURL: `${CORE}/ffmpeg-core.wasm`,
