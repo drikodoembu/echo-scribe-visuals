@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import coreURL from "@ffmpeg/core/dist/umd/ffmpeg-core.js?url";
+import wasmURL from "@ffmpeg/core/dist/umd/ffmpeg-core.wasm?url";
+import classWorkerURL from "@ffmpeg/ffmpeg/dist/umd/814.ffmpeg.js?url";
 
 export const Route = createFileRoute("/fftest")({ component: FF });
 
@@ -12,18 +15,16 @@ function FF() {
         try {
           setMsg("loading");
           const { FFmpeg } = await import("@ffmpeg/ffmpeg");
-          const { toBlobURL } = await import("@ffmpeg/util");
           const ffmpeg = new FFmpeg();
           ffmpeg.on("log", ({ message }) => console.log("FF:", message));
-          const CORE = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
           await ffmpeg.load({
-            coreURL: await toBlobURL(`${CORE}/ffmpeg-core.js`, "text/javascript"),
-            wasmURL: await toBlobURL(`${CORE}/ffmpeg-core.wasm`, "application/wasm"),
-            classWorkerURL: await toBlobURL("https://unpkg.com/@ffmpeg/ffmpeg@0.12.15/dist/umd/814.ffmpeg.js", "text/javascript"),
+            coreURL: new URL(coreURL, location.href).href,
+            wasmURL: new URL(wasmURL, location.href).href,
+            classWorkerURL: new URL(classWorkerURL, location.href).href,
           });
           setMsg("loaded ok");
         } catch (e) {
-          setMsg("ERR: " + (e as Error)?.message + " | " + String(e));
+          setMsg("ERR: " + String(e));
         }
       }}
     >
