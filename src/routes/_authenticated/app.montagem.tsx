@@ -142,6 +142,7 @@ function MontagemPage() {
       // single filter graph with every image loaded at once runs out of RAM).
       for (let i = 0; i < scenes.length; i++) {
         setRenderStage(`Renderizando cena ${i + 1} de ${scenes.length}…`);
+        progressWindow.current = { base: (i / scenes.length) * 85, span: 85 / scenes.length };
         setRenderProgress(Math.round((i / scenes.length) * 85));
 
         const zoomIn = i % 2 === 0;
@@ -178,6 +179,7 @@ function MontagemPage() {
       }
 
       setRenderStage("Juntando cenas e áudio…");
+      progressWindow.current = { base: 88, span: 11 };
       setRenderProgress(88);
 
       const list = scenes.map((_, i) => `file 'seg${i}.mp4'`).join("\n") + "\n";
