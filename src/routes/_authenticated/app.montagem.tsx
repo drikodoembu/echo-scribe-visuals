@@ -145,19 +145,25 @@ function MontagemPage() {
       // Write narration
       setStep("Carregando narração…", 17);
       const narrationBuf = await fetchFile(selectedAudio.signed_url);
-      await ffmpeg.writeFile("narration.dat", narrationBuf);
+      const narrationFile = `narration.${mediaExtension(selectedAudio.format, selectedAudio.signed_url, "mp3")}`;
+      await ffmpeg.writeFile(narrationFile, narrationBuf);
       // Write music (optional)
       const hasMusic = !!selectedMusic?.signed_url;
+      let musicFile = "music.mp3";
       if (hasMusic) {
         setStep("Carregando trilha musical…", 19);
-        const musicBuf = await fetchFile(selectedMusic!.signed_url!);
-        await ffmpeg.writeFile("music.dat", musicBuf);
+        const musicUrl = selectedMusic?.signed_url;
+        if (!musicUrl) throw new Error("Trilha musical indisponível.");
+        musicFile = `music.${mediaExtension(selectedMusic.format, musicUrl, "mp3")}`;
+        const musicBuf = await fetchFile(musicUrl);
+        await ffmpeg.writeFile(musicFile, musicBuf);
       }
       setStep("Mídias carregadas. Iniciando renderização…", 20);
 
       const fps = 30;
       const { w, h } = dims;
-      const perFrames = Math.max(1, Math.round(perScene * fps));
+      const perSceneSeconds = Math.max(1, perScene);
+      const perFrames = Math.max(fps, Math.round(perSceneSeconds * fps));
 
       // Render one scene at a time (low memory: ffmpeg.wasm is 32-bit and a
       // single filter graph with every image loaded at once runs out of RAM).
@@ -168,8 +174,8 @@ function MontagemPage() {
 
         const zoomIn = i % 2 === 0;
         const zExpr = zoomIn
-          ? `min(zoom+0.0015,1.25)`
-          : `if(lte(zoom,1.0),1.25,max(1.001,zoom-0.0015))`;
+          ? `1+0.16*on/${perFrames}`
+          : `1.16-0.16*on/${perFrames}`;
         const dir = i % 4;
         let xExpr = `iw/2-(iw/zoom/2)`;
         let yExpr = `ih/2-(ih/zoom/2)`;
@@ -183,28 +189,41 @@ function MontagemPage() {
         const vf =
           `scale=${sw}:${sh}:force_original_aspect_ratio=increase,crop=${sw}:${sh},` +
           `zoompan=z='${zExpr}':x='${xExpr}':y='${yExpr}':d=${perFrames}:s=${w}x${h}:fps=${fps},` +
-          `setsar=1,format=yuv420p`;
+          `trim=duration=${perSceneSeconds.toFixed(3)},setpts=PTS-STARTPTS,setsar=1,format=yuv420p`;
 
         const code = await ffmpeg.exec([
           "-loop", "1",
-          "-t", perScene.toFixed(3),
+          "-framerate", String(fps),
           "-i", `img${i}.jpg`,
           "-vf", vf,
           "-an",
           "-c:v", "libx264", "-preset", "ultrafast", "-crf", "26",
-          "-pix_fmt", "yuv420p", "-r", String(fps),
+          "-pix_fmt", "yuv420p", "-r", String(fps), "-frames:v", String(perFrames),
           `seg${i}.mp4`,
         ]);
         if (code !== 0) throw new Error(`Falha ao renderizar a cena ${i + 1} (código ${code}).`);
         await ffmpeg.deleteFile(`img${i}.jpg`);
       }
 
-      setRenderStage("Juntando cenas e áudio…");
-      progressWindow.current = { base: 88, span: 10 };
+      setRenderStage("Juntando cenas…");
+      progressWindow.current = { base: 86, span: 5 };
       setRenderProgress(88);
 
       const list = scenes.map((_, i) => `file 'seg${i}.mp4'`).join("\n") + "\n";
       await ffmpeg.writeFile("list.txt", new TextEncoder().encode(list));
+
+      const concatCode = await ffmpeg.exec([
+        "-f", "concat",
+        "-safe", "0",
+        "-i", "list.txt",
+        "-c", "copy",
+        "video.mp4",
+      ]);
+      if (concatCode !== 0) throw new Error(`Falha ao juntar as cenas (código ${concatCode}).`);
+
+      setRenderStage("Mixando narração e trilha…");
+      progressWindow.current = { base: 91, span: 7 };
+      setRenderProgress(91);
 
       const filters: string[] = [];
       filters.push(`[1:a]volume=${narrationVolume},aresample=44100[na]`);
@@ -217,8 +236,8 @@ function MontagemPage() {
         filters.push(`[na][mu]amix=inputs=2:duration=first:dropout_transition=0[aout]`);
       }
 
-      const args: string[] = ["-f", "concat", "-safe", "0", "-i", "list.txt", "-i", "narration.dat"];
-      if (hasMusic) args.push("-stream_loop", "-1", "-i", "music.dat");
+      const args: string[] = ["-i", "video.mp4", "-i", narrationFile];
+      if (hasMusic) args.push("-stream_loop", "-1", "-i", musicFile);
       args.push("-filter_complex", filters.join(";"));
       args.push("-map", "0:v");
       args.push("-map", hasMusic ? "[aout]" : "[na]");
