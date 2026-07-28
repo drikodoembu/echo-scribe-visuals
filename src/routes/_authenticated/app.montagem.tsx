@@ -131,21 +131,20 @@ function MontagemPage() {
         await ffmpeg.writeFile("music.dat", musicBuf);
       }
 
-      setRenderStage("Renderizando (isso pode levar alguns minutos)…");
-
       const fps = 30;
       const { w, h } = dims;
       const perFrames = Math.max(1, Math.round(perScene * fps));
 
-      // Build filter_complex for pan/Ken Burns per image
-      const filters: string[] = [];
+      // Render one scene at a time (low memory: ffmpeg.wasm is 32-bit and a
+      // single filter graph with every image loaded at once runs out of RAM).
       for (let i = 0; i < scenes.length; i++) {
-        // Alternate zoom-in / pan direction for variety
+        setRenderStage(`Renderizando cena ${i + 1} de ${scenes.length}…`);
+        setRenderProgress(Math.round((i / scenes.length) * 85));
+
         const zoomIn = i % 2 === 0;
         const zExpr = zoomIn
-          ? `min(zoom+0.0015,1.4)`
-          : `if(lte(zoom,1.0),1.4,max(1.001,zoom-0.0015))`;
-        // Pan direction alternates
+          ? `min(zoom+0.0015,1.25)`
+          : `if(lte(zoom,1.0),1.25,max(1.001,zoom-0.0015))`;
         const dir = i % 4;
         let xExpr = `iw/2-(iw/zoom/2)`;
         let yExpr = `ih/2-(ih/zoom/2)`;
@@ -154,53 +153,58 @@ function MontagemPage() {
         else if (dir === 2) yExpr = `(ih-ih/zoom)*(on/${perFrames})`;
         else yExpr = `(ih-ih/zoom)*(1-on/${perFrames})`;
 
-        // Pre-scale image large so zoompan stays sharp
-        filters.push(
-          `[${i}:v]scale=${w * 3}:${h * 3}:force_original_aspect_ratio=increase,` +
-            `crop=${w * 3}:${h * 3},` +
-            `zoompan=z='${zExpr}':x='${xExpr}':y='${yExpr}':d=${perFrames}:s=${w}x${h}:fps=${fps},` +
-            `setsar=1,format=yuv420p[v${i}]`,
-        );
-      }
-      const concatInputs = scenes.map((_, i) => `[v${i}]`).join("");
-      filters.push(`${concatInputs}concat=n=${scenes.length}:v=1:a=0[vout]`);
+        const sw = Math.round(w * 1.5);
+        const sh = Math.round(h * 1.5);
+        const vf =
+          `scale=${sw}:${sh}:force_original_aspect_ratio=increase,crop=${sw}:${sh},` +
+          `zoompan=z='${zExpr}':x='${xExpr}':y='${yExpr}':d=${perFrames}:s=${w}x${h}:fps=${fps},` +
+          `setsar=1,format=yuv420p`;
 
-      // Audio filter graph
-      // Narration is input index scenes.length; music if present is scenes.length + 1
-      const narrIdx = scenes.length;
-      filters.push(`[${narrIdx}:a]volume=${narrationVolume},aresample=44100[na]`);
+        const code = await ffmpeg.exec([
+          "-loop", "1",
+          "-t", perScene.toFixed(3),
+          "-i", `img${i}.jpg`,
+          "-vf", vf,
+          "-an",
+          "-c:v", "libx264", "-preset", "ultrafast", "-crf", "26",
+          "-pix_fmt", "yuv420p", "-r", String(fps),
+          `seg${i}.mp4`,
+        ]);
+        if (code !== 0) throw new Error(`Falha ao renderizar a cena ${i + 1} (código ${code}).`);
+        await ffmpeg.deleteFile(`img${i}.jpg`);
+      }
+
+      setRenderStage("Juntando cenas e áudio…");
+      setRenderProgress(88);
+
+      const list = scenes.map((_, i) => `file 'seg${i}.mp4'`).join("\n") + "\n";
+      await ffmpeg.writeFile("list.txt", new TextEncoder().encode(list));
+
+      const filters: string[] = [];
+      filters.push(`[1:a]volume=${narrationVolume},aresample=44100[na]`);
       if (hasMusic) {
-        const P = Math.pow(2, musicPitchSemitones / 12); // pitch factor
-        const T = musicTempo; // final tempo multiplier
-        const atempoFactor = T / P;
-        // atempo supports 0.5..100; chain if outside
-        const atempoChain = buildAtempoChain(atempoFactor);
-        const musIdx = scenes.length + 1;
+        const P = Math.pow(2, musicPitchSemitones / 12);
+        const atempoChain = buildAtempoChain(musicTempo / P);
         filters.push(
-          `[${musIdx}:a]asetrate=44100*${P.toFixed(6)},aresample=44100,${atempoChain},volume=${musicVolume}[mu]`,
+          `[2:a]asetrate=44100*${P.toFixed(6)},aresample=44100,${atempoChain},volume=${musicVolume}[mu]`,
         );
-        filters.push(`[na][mu]amix=inputs=2:duration=first:dropout_transition=0,alimiter=limit=0.95[aout]`);
+        filters.push(`[na][mu]amix=inputs=2:duration=first:dropout_transition=0[aout]`);
       }
 
-      const args: string[] = [];
-      for (let i = 0; i < scenes.length; i++) {
-        args.push("-loop", "1", "-t", perScene.toFixed(3), "-i", `img${i}.jpg`);
-      }
-      args.push("-i", "narration.dat");
+      const args: string[] = ["-f", "concat", "-safe", "0", "-i", "list.txt", "-i", "narration.dat"];
       if (hasMusic) args.push("-stream_loop", "-1", "-i", "music.dat");
-
       args.push("-filter_complex", filters.join(";"));
-      args.push("-map", "[vout]");
+      args.push("-map", "0:v");
       args.push("-map", hasMusic ? "[aout]" : "[na]");
-      args.push("-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-pix_fmt", "yuv420p");
-      args.push("-c:a", "aac", "-b:a", "192k");
-      args.push("-shortest", "-r", String(fps), "-movflags", "+faststart");
-      args.push("out.mp4");
+      args.push("-c:v", "copy", "-c:a", "aac", "-b:a", "160k");
+      args.push("-shortest", "-movflags", "+faststart", "out.mp4");
 
-      await ffmpeg.exec(args);
+      const muxCode = await ffmpeg.exec(args);
+      if (muxCode !== 0) throw new Error(`Falha ao juntar áudio e vídeo (código ${muxCode}).`);
 
       setRenderStage("Finalizando…");
       const data = (await ffmpeg.readFile("out.mp4")) as Uint8Array;
+      if (!data || data.byteLength === 0) throw new Error("O arquivo final ficou vazio.");
       // Copy into a fresh ArrayBuffer to satisfy Blob typing across ffmpeg builds
       const copy = new Uint8Array(data.byteLength);
       copy.set(data);
