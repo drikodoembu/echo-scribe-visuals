@@ -106,11 +106,13 @@ function MontagemPage() {
       ffmpeg.on("progress", ({ progress }) => {
         setRenderProgress(Math.min(99, Math.round(progress * 100)));
       });
-      // The worker is a module worker, so it must load the ESM build of the core.
-      const CORE = "https://unpkg.com/@ffmpeg/[email protected]/dist/esm";
+      // Same-origin ESM core (module workers cannot import cross-origin scripts).
+      const wasmAsset = (await import("../../../public/ffmpeg/ffmpeg-core.wasm.asset.json")).default as {
+        url: string;
+      };
       await ffmpeg.load({
-        coreURL: `${CORE}/ffmpeg-core.js`,
-        wasmURL: `${CORE}/ffmpeg-core.wasm`,
+        coreURL: new URL("/ffmpeg/ffmpeg-core.js", window.location.origin).href,
+        wasmURL: new URL(wasmAsset.url, window.location.origin).href,
       });
 
       setRenderStage("Carregando mídias…");
