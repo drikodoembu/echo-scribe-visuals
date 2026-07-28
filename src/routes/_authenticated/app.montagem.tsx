@@ -544,3 +544,19 @@ function buildAtempoChain(factor: number): string {
   parts.push(`atempo=${f.toFixed(6)}`);
   return parts.join(",");
 }
+
+function mediaExtension(format: string | null | undefined, signedUrl: string, fallback: string): string {
+  const cleanFormat = (format ?? "").toLowerCase().replace(/^audio\//, "").replace(/[^a-z0-9]/g, "");
+  if (cleanFormat === "mpeg") return "mp3";
+  if (["mp3", "wav", "m4a", "aac", "ogg", "webm", "flac", "mp4"].includes(cleanFormat)) return cleanFormat;
+
+  try {
+    const pathname = new URL(signedUrl).pathname.toLowerCase();
+    const ext = pathname.split(".").pop()?.replace(/[^a-z0-9]/g, "");
+    if (ext && ["mp3", "wav", "m4a", "aac", "ogg", "webm", "flac", "mp4"].includes(ext)) return ext;
+  } catch {
+    // Signed URLs can vary by storage provider; fall back to the known default.
+  }
+
+  return fallback;
+}
