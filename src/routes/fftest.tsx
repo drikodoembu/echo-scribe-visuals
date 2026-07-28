@@ -20,7 +20,9 @@ function FF() {
             coreURL: new URL(coreURL, location.href).href,
             wasmURL: new URL(wasmURL, location.href).href,
           });
-          setMsg("loaded ok");
+          await ffmpeg.exec(["-f","lavfi","-i","color=c=red:s=64x64:d=1","-t","1","-pix_fmt","yuv420p","out.mp4"]);
+          const d = await ffmpeg.readFile("out.mp4");
+          setMsg("encoded bytes " + (d as Uint8Array).byteLength);
         } catch (e) {
           setMsg("ERR: " + String(e));
         }
