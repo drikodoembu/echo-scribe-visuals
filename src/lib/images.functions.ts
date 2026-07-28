@@ -66,11 +66,16 @@ export const deleteImageAsset = createServerFn({ method: "POST" })
       .from("image_assets")
       .select("storage_path")
       .eq("id", data.id)
-      .single();
+      .maybeSingle();
     if (fetchErr) throw new Error(fetchErr.message);
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.storage.from("images").remove([row.storage_path]).catch(() => {});
+    if (row?.storage_path) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.storage
+        .from("images")
+        .remove([row.storage_path])
+        .catch(() => {});
+    }
 
     const { error } = await context.supabase.from("image_assets").delete().eq("id", data.id);
     if (error) throw new Error(error.message);

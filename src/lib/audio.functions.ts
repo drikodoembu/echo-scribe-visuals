@@ -32,11 +32,16 @@ export const deleteAudioAsset = createServerFn({ method: "POST" })
       .from("audio_assets")
       .select("storage_path")
       .eq("id", data.id)
-      .single();
+      .maybeSingle();
     if (fetchErr) throw new Error(fetchErr.message);
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.storage.from("audio").remove([row.storage_path]).catch(() => {});
+    if (row?.storage_path) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.storage
+        .from("audio")
+        .remove([row.storage_path])
+        .catch(() => {});
+    }
 
     const { error } = await context.supabase.from("audio_assets").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
@@ -51,8 +56,9 @@ export const signAudioAsset = createServerFn({ method: "POST" })
       .from("audio_assets")
       .select("storage_path")
       .eq("id", data.id)
-      .single();
+      .maybeSingle();
     if (error) throw new Error(error.message);
+    if (!row) throw new Error("Áudio não encontrado.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: signed, error: signErr } = await supabaseAdmin.storage
       .from("audio")
