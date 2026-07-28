@@ -2,11 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState } from "react";
-import { Download, Loader2, Mic, Trash2, Upload } from "lucide-react";
+import { Download, Loader2, Mic, Sparkles, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -21,12 +22,24 @@ import {
   saveAudioAsset,
 } from "@/lib/audio.functions";
 import { listScripts } from "@/lib/scripts.functions";
+import { parseScript } from "@/lib/scripts.prompt";
 
 export const Route = createFileRoute("/_authenticated/app/audio")({
   component: AudioPage,
 });
 
 const ACCEPT = "audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/mp4,audio/aac,audio/ogg,audio/webm,audio/flac,audio/x-m4a";
+
+const VOICES = [
+  { id: "coral", label: "Coral — feminina serena" },
+  { id: "ash", label: "Ash — masculina grave" },
+  { id: "sage", label: "Sage — masculina reflexiva" },
+  { id: "alloy", label: "Alloy — neutra" },
+  { id: "ballad", label: "Ballad — narrativa" },
+  { id: "echo", label: "Echo — masculina clara" },
+  { id: "shimmer", label: "Shimmer — feminina suave" },
+  { id: "verse", label: "Verse — expressiva" },
+];
 
 function AudioPage() {
   const qc = useQueryClient();
@@ -51,6 +64,60 @@ function AudioPage() {
   const [progress, setProgress] = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const [genScriptId, setGenScriptId] = useState<string>("");
+  const [genTitle, setGenTitle] = useState("");
+  const [genText, setGenText] = useState("");
+  const [voice, setVoice] = useState("coral");
+  const [generating, setGenerating] = useState(false);
+
+  function pickGenScript(id: string) {
+    setGenScriptId(id);
+    const s = scripts.find((x) => x.id === id);
+    if (!s) return;
+    const narration = parseScript(s.content ?? "").narration || s.content || "";
+    setGenText(narration.trim());
+    if (!genTitle) setGenTitle(`Narração — ${s.title}`);
+  }
+
+  async function generateNarration() {
+    const text = genText.trim();
+    if (!text) {
+      toast.error("Escolha um roteiro ou escreva o texto da narração.");
+      return;
+    }
+    setGenerating(true);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      if (!token) throw new Error("Sessão expirada.");
+      const res = await fetch("/api/audio/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          text,
+          voice,
+          title: genTitle.trim() || undefined,
+          script_id: genScriptId || null,
+        }),
+      });
+      if (!res.ok) {
+        const msg = await res.text().catch(() => "");
+        if (res.status === 429) throw new Error("Limite de requisições atingido. Tente em instantes.");
+        if (res.status === 402) throw new Error("Créditos de IA esgotados no workspace.");
+        throw new Error(msg || `Falha (${res.status})`);
+      }
+      toast.success("Narração gerada!");
+      qc.invalidateQueries({ queryKey: ["audio_assets"] });
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setGenerating(false);
+    }
+  }
 
   function pickScript(id: string) {
     setScriptId(id);
@@ -169,9 +236,87 @@ function AudioPage() {
       <header className="space-y-1">
         <h1 className="font-display text-3xl text-primary">Áudio</h1>
         <p className="text-sm text-muted-foreground">
-          Envie sua narração pronta (MP3, WAV, M4A, OGG…) e associe a um roteiro.
+          Gere a narração do roteiro com IA ou envie sua narração pronta (MP3, WAV, M4A, OGG…).
         </p>
       </header>
+
+      <div className="grid gap-4 rounded-xl border border-gold/30 bg-card/60 p-5 md:grid-cols-2">
+        <div className="md:col-span-2">
+          <h2 className="font-display text-lg text-gold">Gerar narração com IA</h2>
+          <p className="text-xs text-muted-foreground">
+            Texto-para-voz em MP3, salvo automaticamente na sua biblioteca.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Label>Roteiro</Label>
+          <Select value={genScriptId} onValueChange={pickGenScript}>
+            <SelectTrigger>
+              <SelectValue placeholder="Usar um roteiro salvo…" />
+            </SelectTrigger>
+            <SelectContent>
+              {scripts.length === 0 ? (
+                <div className="px-3 py-2 text-sm text-muted-foreground">Nenhum roteiro salvo.</div>
+              ) : (
+                scripts.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.title}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Voz</Label>
+          <Select value={voice} onValueChange={setVoice}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {VOICES.map((v) => (
+                <SelectItem key={v.id} value={v.id}>
+                  {v.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2 md:col-span-2">
+          <Label htmlFor="gen-title">Título</Label>
+          <Input
+            id="gen-title"
+            value={genTitle}
+            onChange={(e) => setGenTitle(e.target.value)}
+            placeholder="Ex.: Narração — Perdão"
+          />
+        </div>
+        <div className="space-y-2 md:col-span-2">
+          <Label htmlFor="gen-text">Texto para narrar</Label>
+          <Textarea
+            id="gen-text"
+            value={genText}
+            onChange={(e) => setGenText(e.target.value)}
+            placeholder="Cole ou edite aqui o texto que será narrado (máx. 5000 caracteres)."
+            className="min-h-[180px] text-base leading-relaxed"
+            maxLength={5000}
+          />
+          <p className="text-xs text-muted-foreground">{genText.length} / 5000</p>
+        </div>
+        <div className="md:col-span-2">
+          <Button
+            onClick={generateNarration}
+            disabled={generating || !genText.trim()}
+            className="bg-primary text-primary-foreground"
+          >
+            {generating ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="mr-2 h-4 w-4" />
+            )}
+            Gerar narração
+          </Button>
+        </div>
+      </div>
 
       <div className="grid gap-4 rounded-xl border border-border bg-card/60 p-5 md:grid-cols-2">
         <div className="space-y-2">
