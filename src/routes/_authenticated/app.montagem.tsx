@@ -92,14 +92,34 @@ function MontagemPage() {
     if (!selectedAudio?.signed_url) return toast.error("Selecione a narração.");
 
     setRendering(true);
-    setRenderProgress(0);
+    setRenderProgress(1);
     setLog("");
     setVideoUrl(null);
     setRenderStage("Carregando motor de vídeo…");
+    progressWindow.current = { base: 0, span: 1 };
 
     try {
+      const setStep = (stage: string, progress: number) => {
+        setRenderStage(stage);
+        setRenderProgress(Math.max(1, Math.min(99, Math.round(progress))));
+      };
+
       const { FFmpeg } = await import("@ffmpeg/ffmpeg");
       const { fetchFile } = await import("@ffmpeg/util");
+      setStep("Verificando motor de vídeo…", 2);
+
+      const coreURL = new URL("/ffmpeg/ffmpeg-core.js", window.location.origin).href;
+      const wasmAsset = (await fetch("/ffmpeg/ffmpeg-core.wasm.asset.json", { cache: "no-store" }).then((r) => {
+        if (!r.ok) throw new Error("Não foi possível localizar o motor FFmpeg (WASM).");
+        return r.json();
+      })) as { url: string };
+      const wasmURL = new URL(wasmAsset.url, window.location.origin).href;
+      const coreCheck = await fetch(coreURL, { method: "HEAD", cache: "no-store" });
+      const wasmCheck = await fetch(wasmURL, { method: "HEAD", cache: "no-store" });
+      if (!coreCheck.ok || !wasmCheck.ok) {
+        throw new Error("Arquivos do motor de vídeo indisponíveis. Recarregue a página e tente novamente.");
+      }
+
       const ffmpeg = new FFmpeg();
       ffmpeg.on("log", ({ message }) => {
         setLog((l) => (l + "\n" + message).slice(-8000));
@@ -109,30 +129,31 @@ function MontagemPage() {
         const p = Math.max(0, Math.min(1, progress));
         setRenderProgress(Math.min(99, Math.round(base + p * span)));
       });
-      // Same-origin ESM core (module workers cannot import cross-origin scripts).
-      const wasmAsset = (await fetch("/ffmpeg/ffmpeg-core.wasm.asset.json").then((r) =>
-        r.json(),
-      )) as { url: string };
+      setStep("Inicializando FFmpeg.wasm…", 4);
       await ffmpeg.load({
-        coreURL: new URL("/ffmpeg/ffmpeg-core.js", window.location.origin).href,
-        wasmURL: new URL(wasmAsset.url, window.location.origin).href,
+        coreURL,
+        wasmURL,
       });
+      setStep("Motor carregado. Preparando mídias…", 8);
 
-      setRenderStage("Carregando mídias…");
       // Write images
       for (let i = 0; i < scenes.length; i++) {
+        setStep(`Carregando imagem ${i + 1} de ${scenes.length}…`, 8 + (i / Math.max(1, scenes.length)) * 8);
         const buf = await fetchFile(scenes[i].url);
         await ffmpeg.writeFile(`img${i}.jpg`, buf);
       }
       // Write narration
+      setStep("Carregando narração…", 17);
       const narrationBuf = await fetchFile(selectedAudio.signed_url);
       await ffmpeg.writeFile("narration.dat", narrationBuf);
       // Write music (optional)
       const hasMusic = !!selectedMusic?.signed_url;
       if (hasMusic) {
+        setStep("Carregando trilha musical…", 19);
         const musicBuf = await fetchFile(selectedMusic!.signed_url!);
         await ffmpeg.writeFile("music.dat", musicBuf);
       }
+      setStep("Mídias carregadas. Iniciando renderização…", 20);
 
       const fps = 30;
       const { w, h } = dims;
@@ -142,8 +163,8 @@ function MontagemPage() {
       // single filter graph with every image loaded at once runs out of RAM).
       for (let i = 0; i < scenes.length; i++) {
         setRenderStage(`Renderizando cena ${i + 1} de ${scenes.length}…`);
-        progressWindow.current = { base: (i / scenes.length) * 85, span: 85 / scenes.length };
-        setRenderProgress(Math.round((i / scenes.length) * 85));
+        progressWindow.current = { base: 20 + (i / scenes.length) * 65, span: 65 / scenes.length };
+        setRenderProgress(Math.round(20 + (i / scenes.length) * 65));
 
         const zoomIn = i % 2 === 0;
         const zExpr = zoomIn
@@ -179,7 +200,7 @@ function MontagemPage() {
       }
 
       setRenderStage("Juntando cenas e áudio…");
-      progressWindow.current = { base: 88, span: 11 };
+      progressWindow.current = { base: 88, span: 10 };
       setRenderProgress(88);
 
       const list = scenes.map((_, i) => `file 'seg${i}.mp4'`).join("\n") + "\n";
