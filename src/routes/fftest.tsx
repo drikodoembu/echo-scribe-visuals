@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-const CDN="https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
-const coreURL=`${CDN}/ffmpeg-core.js`,wasmURL=`${CDN}/ffmpeg-core.wasm`,classWorkerURL="/ffmpeg/814.ffmpeg.js";
+const CDN="https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm";
+const coreURL=`${CDN}/ffmpeg-core.js`,wasmURL=`${CDN}/ffmpeg-core.wasm`;
 
 export const Route = createFileRoute("/fftest")({ component: FF });
 
@@ -19,7 +19,6 @@ function FF() {
           await ffmpeg.load({
             coreURL: new URL(coreURL, location.href).href,
             wasmURL: new URL(wasmURL, location.href).href,
-            classWorkerURL: new URL(classWorkerURL, location.href).href,
           });
           setMsg("loaded ok");
         } catch (e) {
