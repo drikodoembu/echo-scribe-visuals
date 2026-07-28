@@ -192,6 +192,7 @@ function MontagemPage() {
           `trim=duration=${perSceneSeconds.toFixed(3)},setpts=PTS-STARTPTS,setsar=1,format=yuv420p`;
 
         const code = await ffmpeg.exec([
+          "-y",
           "-loop", "1",
           "-framerate", String(fps),
           "-i", `img${i}.jpg`,
@@ -213,6 +214,7 @@ function MontagemPage() {
       await ffmpeg.writeFile("list.txt", new TextEncoder().encode(list));
 
       const concatCode = await ffmpeg.exec([
+        "-y",
         "-f", "concat",
         "-safe", "0",
         "-i", "list.txt",
@@ -237,6 +239,7 @@ function MontagemPage() {
       }
 
       const args: string[] = ["-i", "video.mp4", "-i", narrationFile];
+      args.unshift("-y");
       if (hasMusic) args.push("-stream_loop", "-1", "-i", musicFile);
       args.push("-filter_complex", filters.join(";"));
       args.push("-map", "0:v");
