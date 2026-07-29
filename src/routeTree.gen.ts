@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
+import { Route as ApiSeoGenerateRouteImport } from './routes/api/seo.generate'
 import { Route as ApiScriptsStreamRouteImport } from './routes/api/scripts.stream'
 import { Route as ApiImagesGenerateRouteImport } from './routes/api/images.generate'
 import { Route as ApiAudioGenerateRouteImport } from './routes/api/audio.generate'
@@ -62,6 +63,11 @@ const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const ApiSeoGenerateRoute = ApiSeoGenerateRouteImport.update({
+  id: '/api/seo/generate',
+  path: '/api/seo/generate',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiScriptsStreamRoute = ApiScriptsStreamRouteImport.update({
   id: '/api/scripts/stream',
@@ -147,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/api/audio/generate': typeof ApiAudioGenerateRoute
   '/api/images/generate': typeof ApiImagesGenerateRoute
   '/api/scripts/stream': typeof ApiScriptsStreamRoute
+  '/api/seo/generate': typeof ApiSeoGenerateRoute
   '/app/': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRoutesByTo {
@@ -166,6 +173,7 @@ export interface FileRoutesByTo {
   '/api/audio/generate': typeof ApiAudioGenerateRoute
   '/api/images/generate': typeof ApiImagesGenerateRoute
   '/api/scripts/stream': typeof ApiScriptsStreamRoute
+  '/api/seo/generate': typeof ApiSeoGenerateRoute
   '/app': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRoutesById {
@@ -188,6 +196,7 @@ export interface FileRoutesById {
   '/api/audio/generate': typeof ApiAudioGenerateRoute
   '/api/images/generate': typeof ApiImagesGenerateRoute
   '/api/scripts/stream': typeof ApiScriptsStreamRoute
+  '/api/seo/generate': typeof ApiSeoGenerateRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRouteTypes {
@@ -210,6 +219,7 @@ export interface FileRouteTypes {
     | '/api/audio/generate'
     | '/api/images/generate'
     | '/api/scripts/stream'
+    | '/api/seo/generate'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -229,6 +239,7 @@ export interface FileRouteTypes {
     | '/api/audio/generate'
     | '/api/images/generate'
     | '/api/scripts/stream'
+    | '/api/seo/generate'
     | '/app'
   id:
     | '__root__'
@@ -250,6 +261,7 @@ export interface FileRouteTypes {
     | '/api/audio/generate'
     | '/api/images/generate'
     | '/api/scripts/stream'
+    | '/api/seo/generate'
     | '/_authenticated/app/'
   fileRoutesById: FileRoutesById
 }
@@ -261,6 +273,7 @@ export interface RootRouteChildren {
   ApiAudioGenerateRoute: typeof ApiAudioGenerateRoute
   ApiImagesGenerateRoute: typeof ApiImagesGenerateRoute
   ApiScriptsStreamRoute: typeof ApiScriptsStreamRoute
+  ApiSeoGenerateRoute: typeof ApiSeoGenerateRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -313,6 +326,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/'
       preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/api/seo/generate': {
+      id: '/api/seo/generate'
+      path: '/api/seo/generate'
+      fullPath: '/api/seo/generate'
+      preLoaderRoute: typeof ApiSeoGenerateRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/scripts/stream': {
       id: '/api/scripts/stream'
@@ -459,6 +479,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAudioGenerateRoute: ApiAudioGenerateRoute,
   ApiImagesGenerateRoute: ApiImagesGenerateRoute,
   ApiScriptsStreamRoute: ApiScriptsStreamRoute,
+  ApiSeoGenerateRoute: ApiSeoGenerateRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

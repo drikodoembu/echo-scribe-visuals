@@ -10,6 +10,7 @@ import {
   Mic,
   Music,
   Settings,
+  Search,
   Video,
   Youtube,
   Moon,
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/app")({
 });
 
 type NavItem = {
-  to: "/app" | "/app/roteiros" | "/app/audio" | "/app/imagens" | "/app/musicas" | "/app/montagem" | "/app/publicacao" | "/app/agenda" | "/app/configuracoes";
+  to: "/app" | "/app/roteiros" | "/app/audio" | "/app/imagens" | "/app/musicas" | "/app/montagem" | "/app/seo" | "/app/publicacao" | "/app/agenda" | "/app/configuracoes";
   label: string;
   icon: typeof LayoutDashboard;
   exact?: boolean;
@@ -37,6 +38,7 @@ const NAV: readonly NavItem[] = [
   { to: "/app/imagens", label: "Imagens", icon: ImageIcon },
   { to: "/app/musicas", label: "Músicas", icon: Music },
   { to: "/app/montagem", label: "Montagem", icon: Video },
+  { to: "/app/seo", label: "SEO", icon: Search },
   { to: "/app/publicacao", label: "Publicação", icon: Youtube },
   { to: "/app/agenda", label: "Agenda", icon: Calendar },
   { to: "/app/configuracoes", label: "Configurações", icon: Settings },
