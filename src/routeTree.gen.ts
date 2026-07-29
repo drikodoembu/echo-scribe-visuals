@@ -16,9 +16,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
+import { Route as ApiSeoGenerateRouteImport } from './routes/api/seo.generate'
 import { Route as ApiScriptsStreamRouteImport } from './routes/api/scripts.stream'
 import { Route as ApiImagesGenerateRouteImport } from './routes/api/images.generate'
 import { Route as ApiAudioGenerateRouteImport } from './routes/api/audio.generate'
+import { Route as AuthenticatedAppSeoRouteImport } from './routes/_authenticated/app.seo'
 import { Route as AuthenticatedAppRoteirosRouteImport } from './routes/_authenticated/app.roteiros'
 import { Route as AuthenticatedAppPublicacaoRouteImport } from './routes/_authenticated/app.publicacao'
 import { Route as AuthenticatedAppMusicasRouteImport } from './routes/_authenticated/app.musicas'
@@ -63,6 +65,11 @@ const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const ApiSeoGenerateRoute = ApiSeoGenerateRouteImport.update({
+  id: '/api/seo/generate',
+  path: '/api/seo/generate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiScriptsStreamRoute = ApiScriptsStreamRouteImport.update({
   id: '/api/scripts/stream',
   path: '/api/scripts/stream',
@@ -77,6 +84,11 @@ const ApiAudioGenerateRoute = ApiAudioGenerateRouteImport.update({
   id: '/api/audio/generate',
   path: '/api/audio/generate',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAppSeoRoute = AuthenticatedAppSeoRouteImport.update({
+  id: '/seo',
+  path: '/seo',
+  getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppRoteirosRoute =
   AuthenticatedAppRoteirosRouteImport.update({
@@ -144,9 +156,11 @@ export interface FileRoutesByFullPath {
   '/app/musicas': typeof AuthenticatedAppMusicasRoute
   '/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
   '/app/roteiros': typeof AuthenticatedAppRoteirosRoute
+  '/app/seo': typeof AuthenticatedAppSeoRoute
   '/api/audio/generate': typeof ApiAudioGenerateRoute
   '/api/images/generate': typeof ApiImagesGenerateRoute
   '/api/scripts/stream': typeof ApiScriptsStreamRoute
+  '/api/seo/generate': typeof ApiSeoGenerateRoute
   '/app/': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRoutesByTo {
@@ -163,9 +177,11 @@ export interface FileRoutesByTo {
   '/app/musicas': typeof AuthenticatedAppMusicasRoute
   '/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
   '/app/roteiros': typeof AuthenticatedAppRoteirosRoute
+  '/app/seo': typeof AuthenticatedAppSeoRoute
   '/api/audio/generate': typeof ApiAudioGenerateRoute
   '/api/images/generate': typeof ApiImagesGenerateRoute
   '/api/scripts/stream': typeof ApiScriptsStreamRoute
+  '/api/seo/generate': typeof ApiSeoGenerateRoute
   '/app': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRoutesById {
@@ -185,9 +201,11 @@ export interface FileRoutesById {
   '/_authenticated/app/musicas': typeof AuthenticatedAppMusicasRoute
   '/_authenticated/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
   '/_authenticated/app/roteiros': typeof AuthenticatedAppRoteirosRoute
+  '/_authenticated/app/seo': typeof AuthenticatedAppSeoRoute
   '/api/audio/generate': typeof ApiAudioGenerateRoute
   '/api/images/generate': typeof ApiImagesGenerateRoute
   '/api/scripts/stream': typeof ApiScriptsStreamRoute
+  '/api/seo/generate': typeof ApiSeoGenerateRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRouteTypes {
@@ -207,9 +225,11 @@ export interface FileRouteTypes {
     | '/app/musicas'
     | '/app/publicacao'
     | '/app/roteiros'
+    | '/app/seo'
     | '/api/audio/generate'
     | '/api/images/generate'
     | '/api/scripts/stream'
+    | '/api/seo/generate'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -226,9 +246,11 @@ export interface FileRouteTypes {
     | '/app/musicas'
     | '/app/publicacao'
     | '/app/roteiros'
+    | '/app/seo'
     | '/api/audio/generate'
     | '/api/images/generate'
     | '/api/scripts/stream'
+    | '/api/seo/generate'
     | '/app'
   id:
     | '__root__'
@@ -247,9 +269,11 @@ export interface FileRouteTypes {
     | '/_authenticated/app/musicas'
     | '/_authenticated/app/publicacao'
     | '/_authenticated/app/roteiros'
+    | '/_authenticated/app/seo'
     | '/api/audio/generate'
     | '/api/images/generate'
     | '/api/scripts/stream'
+    | '/api/seo/generate'
     | '/_authenticated/app/'
   fileRoutesById: FileRoutesById
 }
@@ -261,6 +285,7 @@ export interface RootRouteChildren {
   ApiAudioGenerateRoute: typeof ApiAudioGenerateRoute
   ApiImagesGenerateRoute: typeof ApiImagesGenerateRoute
   ApiScriptsStreamRoute: typeof ApiScriptsStreamRoute
+  ApiSeoGenerateRoute: typeof ApiSeoGenerateRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -314,6 +339,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/api/seo/generate': {
+      id: '/api/seo/generate'
+      path: '/api/seo/generate'
+      fullPath: '/api/seo/generate'
+      preLoaderRoute: typeof ApiSeoGenerateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/scripts/stream': {
       id: '/api/scripts/stream'
       path: '/api/scripts/stream'
@@ -334,6 +366,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/audio/generate'
       preLoaderRoute: typeof ApiAudioGenerateRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/app/seo': {
+      id: '/_authenticated/app/seo'
+      path: '/seo'
+      fullPath: '/app/seo'
+      preLoaderRoute: typeof AuthenticatedAppSeoRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/roteiros': {
       id: '/_authenticated/app/roteiros'
@@ -411,6 +450,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppMusicasRoute: typeof AuthenticatedAppMusicasRoute
   AuthenticatedAppPublicacaoRoute: typeof AuthenticatedAppPublicacaoRoute
   AuthenticatedAppRoteirosRoute: typeof AuthenticatedAppRoteirosRoute
+  AuthenticatedAppSeoRoute: typeof AuthenticatedAppSeoRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
 }
 
@@ -424,6 +464,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppMusicasRoute: AuthenticatedAppMusicasRoute,
   AuthenticatedAppPublicacaoRoute: AuthenticatedAppPublicacaoRoute,
   AuthenticatedAppRoteirosRoute: AuthenticatedAppRoteirosRoute,
+  AuthenticatedAppSeoRoute: AuthenticatedAppSeoRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
 }
 
@@ -459,6 +500,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAudioGenerateRoute: ApiAudioGenerateRoute,
   ApiImagesGenerateRoute: ApiImagesGenerateRoute,
   ApiScriptsStreamRoute: ApiScriptsStreamRoute,
+  ApiSeoGenerateRoute: ApiSeoGenerateRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

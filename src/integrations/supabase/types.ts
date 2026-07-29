@@ -378,6 +378,77 @@ export type Database = {
         }
         Relationships: []
       }
+      video_seo: {
+        Row: {
+          category: string | null
+          chapters: Json
+          created_at: string
+          description: string
+          format: string
+          hashtags: string[]
+          id: string
+          keywords: string[]
+          language: string
+          model: string | null
+          pinned_comment: string
+          script_id: string | null
+          tags: string[]
+          thumbnail_text: string
+          title: string
+          title_options: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          chapters?: Json
+          created_at?: string
+          description?: string
+          format?: string
+          hashtags?: string[]
+          id?: string
+          keywords?: string[]
+          language?: string
+          model?: string | null
+          pinned_comment?: string
+          script_id?: string | null
+          tags?: string[]
+          thumbnail_text?: string
+          title?: string
+          title_options?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          chapters?: Json
+          created_at?: string
+          description?: string
+          format?: string
+          hashtags?: string[]
+          id?: string
+          keywords?: string[]
+          language?: string
+          model?: string | null
+          pinned_comment?: string
+          script_id?: string | null
+          tags?: string[]
+          thumbnail_text?: string
+          title?: string
+          title_options?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_seo_script_id_fkey"
+            columns: ["script_id"]
+            isOneToOne: false
+            referencedRelation: "scripts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
