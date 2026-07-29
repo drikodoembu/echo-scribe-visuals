@@ -20,6 +20,7 @@ import { Route as ApiSeoGenerateRouteImport } from './routes/api/seo.generate'
 import { Route as ApiScriptsStreamRouteImport } from './routes/api/scripts.stream'
 import { Route as ApiImagesGenerateRouteImport } from './routes/api/images.generate'
 import { Route as ApiAudioGenerateRouteImport } from './routes/api/audio.generate'
+import { Route as AuthenticatedAppSeoRouteImport } from './routes/_authenticated/app.seo'
 import { Route as AuthenticatedAppRoteirosRouteImport } from './routes/_authenticated/app.roteiros'
 import { Route as AuthenticatedAppPublicacaoRouteImport } from './routes/_authenticated/app.publicacao'
 import { Route as AuthenticatedAppMusicasRouteImport } from './routes/_authenticated/app.musicas'
@@ -83,6 +84,11 @@ const ApiAudioGenerateRoute = ApiAudioGenerateRouteImport.update({
   id: '/api/audio/generate',
   path: '/api/audio/generate',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAppSeoRoute = AuthenticatedAppSeoRouteImport.update({
+  id: '/seo',
+  path: '/seo',
+  getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppRoteirosRoute =
   AuthenticatedAppRoteirosRouteImport.update({
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/app/musicas': typeof AuthenticatedAppMusicasRoute
   '/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
   '/app/roteiros': typeof AuthenticatedAppRoteirosRoute
+  '/app/seo': typeof AuthenticatedAppSeoRoute
   '/api/audio/generate': typeof ApiAudioGenerateRoute
   '/api/images/generate': typeof ApiImagesGenerateRoute
   '/api/scripts/stream': typeof ApiScriptsStreamRoute
@@ -170,6 +177,7 @@ export interface FileRoutesByTo {
   '/app/musicas': typeof AuthenticatedAppMusicasRoute
   '/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
   '/app/roteiros': typeof AuthenticatedAppRoteirosRoute
+  '/app/seo': typeof AuthenticatedAppSeoRoute
   '/api/audio/generate': typeof ApiAudioGenerateRoute
   '/api/images/generate': typeof ApiImagesGenerateRoute
   '/api/scripts/stream': typeof ApiScriptsStreamRoute
@@ -193,6 +201,7 @@ export interface FileRoutesById {
   '/_authenticated/app/musicas': typeof AuthenticatedAppMusicasRoute
   '/_authenticated/app/publicacao': typeof AuthenticatedAppPublicacaoRoute
   '/_authenticated/app/roteiros': typeof AuthenticatedAppRoteirosRoute
+  '/_authenticated/app/seo': typeof AuthenticatedAppSeoRoute
   '/api/audio/generate': typeof ApiAudioGenerateRoute
   '/api/images/generate': typeof ApiImagesGenerateRoute
   '/api/scripts/stream': typeof ApiScriptsStreamRoute
@@ -216,6 +225,7 @@ export interface FileRouteTypes {
     | '/app/musicas'
     | '/app/publicacao'
     | '/app/roteiros'
+    | '/app/seo'
     | '/api/audio/generate'
     | '/api/images/generate'
     | '/api/scripts/stream'
@@ -236,6 +246,7 @@ export interface FileRouteTypes {
     | '/app/musicas'
     | '/app/publicacao'
     | '/app/roteiros'
+    | '/app/seo'
     | '/api/audio/generate'
     | '/api/images/generate'
     | '/api/scripts/stream'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/musicas'
     | '/_authenticated/app/publicacao'
     | '/_authenticated/app/roteiros'
+    | '/_authenticated/app/seo'
     | '/api/audio/generate'
     | '/api/images/generate'
     | '/api/scripts/stream'
@@ -355,6 +367,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAudioGenerateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/app/seo': {
+      id: '/_authenticated/app/seo'
+      path: '/seo'
+      fullPath: '/app/seo'
+      preLoaderRoute: typeof AuthenticatedAppSeoRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/roteiros': {
       id: '/_authenticated/app/roteiros'
       path: '/roteiros'
@@ -431,6 +450,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppMusicasRoute: typeof AuthenticatedAppMusicasRoute
   AuthenticatedAppPublicacaoRoute: typeof AuthenticatedAppPublicacaoRoute
   AuthenticatedAppRoteirosRoute: typeof AuthenticatedAppRoteirosRoute
+  AuthenticatedAppSeoRoute: typeof AuthenticatedAppSeoRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
 }
 
@@ -444,6 +464,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppMusicasRoute: AuthenticatedAppMusicasRoute,
   AuthenticatedAppPublicacaoRoute: AuthenticatedAppPublicacaoRoute,
   AuthenticatedAppRoteirosRoute: AuthenticatedAppRoteirosRoute,
+  AuthenticatedAppSeoRoute: AuthenticatedAppSeoRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
 }
 
