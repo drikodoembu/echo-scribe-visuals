@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Download, Film, Loader2, Play, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/app/montagem")({
   component: MontagemPage,
 });
 
-type SceneImg = { id: string; url: string; title: string };
+type SceneImg = { id: string; url: string; title: string; weight: number };
 
 function MontagemPage() {
   const listScr = useServerFn(listScripts);
@@ -66,7 +66,10 @@ function MontagemPage() {
 
   function addScene(img: { id: string; signed_url: string | null; title: string }) {
     if (!img.signed_url) return;
-    setScenes((s) => [...s, { id: img.id, url: img.signed_url!, title: img.title }]);
+    setScenes((s) => [...s, { id: img.id, url: img.signed_url!, title: img.title, weight: 1 }]);
+  }
+  function setSceneWeight(idx: number, weight: number) {
+    setScenes((s) => s.map((sc, i) => (i === idx ? { ...sc, weight: Math.max(0.1, weight) } : sc)));
   }
   function removeScene(idx: number) {
     setScenes((s) => s.filter((_, i) => i !== idx));
@@ -82,9 +85,42 @@ function MontagemPage() {
   }
 
   const dims = format === "9:16" ? { w: 720, h: 1280 } : { w: 1280, h: 720 };
-  const totalDur = useNarrationLen && selectedAudio?.duration_seconds
-    ? selectedAudio.duration_seconds
-    : Math.max(1, scenes.length) * sceneDuration;
+
+  // Real narration length (metadata in the DB can be missing or rounded).
+  const [measuredDur, setMeasuredDur] = useState<number | null>(null);
+  useEffect(() => {
+    setMeasuredDur(null);
+    const url = selectedAudio?.signed_url;
+    if (!url) return;
+    const el = new Audio();
+    el.preload = "metadata";
+    const onMeta = () => {
+      if (isFinite(el.duration) && el.duration > 0) setMeasuredDur(el.duration);
+    };
+    el.addEventListener("loadedmetadata", onMeta);
+    el.src = url;
+    return () => {
+      el.removeEventListener("loadedmetadata", onMeta);
+      el.src = "";
+    };
+  }, [selectedAudio?.signed_url]);
+
+  const narrationDur = measuredDur ?? selectedAudio?.duration_seconds ?? null;
+  const totalDur =
+    useNarrationLen && narrationDur ? narrationDur : Math.max(1, scenes.length) * sceneDuration;
+
+  // Each scene gets a slice of the narration proportional to its weight,
+  // so the images always cover exactly the audio length.
+  const sceneDurations = useMemo(() => {
+    if (scenes.length === 0) return [] as number[];
+    const sumW = scenes.reduce((a, s) => a + (s.weight || 1), 0) || scenes.length;
+    const raw = scenes.map((s) => (totalDur * (s.weight || 1)) / sumW);
+    const clamped = raw.map((d) => Math.max(1, d));
+    const sum = clamped.reduce((a, b) => a + b, 0);
+    if (sum <= 0) return clamped;
+    const scale = totalDur / sum;
+    return scale < 1 ? clamped : clamped.map((d) => d * scale);
+  }, [scenes, totalDur]);
   const perScene = scenes.length > 0 ? totalDur / scenes.length : sceneDuration;
 
   async function render() {
@@ -162,8 +198,6 @@ function MontagemPage() {
 
       const fps = 30;
       const { w, h } = dims;
-      const perSceneSeconds = Math.max(1, perScene);
-      const perFrames = Math.max(fps, Math.round(perSceneSeconds * fps));
 
       // Render one scene at a time (low memory: ffmpeg.wasm is 32-bit and a
       // single filter graph with every image loaded at once runs out of RAM).
@@ -171,6 +205,9 @@ function MontagemPage() {
         setRenderStage(`Renderizando cena ${i + 1} de ${scenes.length}…`);
         progressWindow.current = { base: 20 + (i / scenes.length) * 65, span: 65 / scenes.length };
         setRenderProgress(Math.round(20 + (i / scenes.length) * 65));
+
+        const perSceneSeconds = Math.max(1, sceneDurations[i] ?? perScene);
+        const perFrames = Math.max(fps, Math.round(perSceneSeconds * fps));
 
         const zoomIn = i % 2 === 0;
         const zExpr = zoomIn
