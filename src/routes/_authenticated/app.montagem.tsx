@@ -382,7 +382,8 @@ function MontagemPage() {
               </label>
             )}
             <span className="text-muted-foreground">
-              ≈ {perScene.toFixed(1)}s/cena · total {totalDur.toFixed(0)}s
+              total {totalDur.toFixed(1)}s
+              {useNarrationLen && narrationDur ? " (narração)" : ""} · {scenes.length} cena(s)
             </span>
           </div>
         </div>
@@ -397,9 +398,21 @@ function MontagemPage() {
               <div key={`${s.id}-${i}`} className="relative overflow-hidden rounded-lg border border-border bg-background">
                 <img src={s.url} alt={s.title} className="aspect-video w-full object-cover" />
                 <div className="absolute left-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-xs text-white">#{i + 1}</div>
+                <div className="absolute right-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-xs text-white">
+                  {(sceneDurations[i] ?? perScene).toFixed(1)}s
+                </div>
                 <div className="flex items-center justify-between gap-1 p-1.5 text-xs">
                   <span className="truncate">{s.title}</span>
                   <div className="flex items-center gap-1">
+                    <Input
+                      type="number"
+                      min={0.1}
+                      step={0.1}
+                      value={s.weight}
+                      onChange={(e) => setSceneWeight(i, Number(e.target.value) || 1)}
+                      className="h-6 w-12 px-1 text-[11px]"
+                      title="Peso da cena (proporção do tempo)"
+                    />
                     <button className="rounded p-1 hover:bg-secondary" onClick={() => moveScene(i, -1)} aria-label="Subir">
                       <ArrowUp className="h-3 w-3" />
                     </button>
