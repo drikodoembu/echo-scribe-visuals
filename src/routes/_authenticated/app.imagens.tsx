@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, Image as ImageIcon, Loader2, Sparkles, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import {
   saveImageAsset,
 } from "@/lib/images.functions";
 import { listScripts } from "@/lib/scripts.functions";
+import { listAudioAssets } from "@/lib/audio.functions";
 import { parseScript } from "@/lib/scripts.prompt";
 
 export const Route = createFileRoute("/_authenticated/app/imagens")({
@@ -30,10 +31,32 @@ export const Route = createFileRoute("/_authenticated/app/imagens")({
 
 const ACCEPT = "image/png,image/jpeg,image/webp,image/avif,image/gif";
 
+const VARIATIONS = [
+  "wide establishing shot, soft rim light",
+  "close-up detail, shallow depth of field",
+  "low angle, dramatic chiaroscuro light",
+  "overhead composition, calm symmetry",
+];
+
+function fitPromptsToCount(prompts: string[], count: number): string[] {
+  if (prompts.length === 0 || count <= 0) return [];
+  if (prompts.length >= count) return prompts.slice(0, count);
+  const out = [...prompts];
+  let i = 0;
+  while (out.length < count) {
+    const base = prompts[i % prompts.length];
+    const variation = VARIATIONS[Math.floor(i / prompts.length) % VARIATIONS.length];
+    out.push(`${base}, ${variation}`);
+    i++;
+  }
+  return out;
+}
+
 function ImagesPage() {
   const qc = useQueryClient();
   const list = useServerFn(listImageAssets);
   const listScr = useServerFn(listScripts);
+  const listAud = useServerFn(listAudioAssets);
   const save = useServerFn(saveImageAsset);
   const del = useServerFn(deleteImageAsset);
 
@@ -44,6 +67,10 @@ function ImagesPage() {
   const { data: scripts = [] } = useQuery({
     queryKey: ["scripts"],
     queryFn: () => listScr(),
+  });
+  const { data: audios = [] } = useQuery({
+    queryKey: ["audio_assets"],
+    queryFn: () => listAud(),
   });
 
   const [scriptId, setScriptId] = useState<string>("");
@@ -58,11 +85,44 @@ function ImagesPage() {
   const [aspect, setAspect] = useState<"9:16" | "16:9" | "1:1">("9:16");
   const [genBusy, setGenBusy] = useState(false);
   const [genProgress, setGenProgress] = useState({ done: 0, total: 0 });
+  const [audioId, setAudioId] = useState<string>("");
+  const [secondsPerImage, setSecondsPerImage] = useState<number>(6);
+  const [measuredDur, setMeasuredDur] = useState<number | null>(null);
+
+  const selectedAudio = audios.find((a) => a.id === audioId);
+
+  useEffect(() => {
+    setMeasuredDur(null);
+    const url = selectedAudio?.signed_url;
+    if (!url) return;
+    const el = new Audio();
+    el.preload = "metadata";
+    const onMeta = () => {
+      if (isFinite(el.duration) && el.duration > 0) setMeasuredDur(el.duration);
+    };
+    el.addEventListener("loadedmetadata", onMeta);
+    el.src = url;
+    return () => {
+      el.removeEventListener("loadedmetadata", onMeta);
+      el.src = "";
+    };
+  }, [selectedAudio?.signed_url]);
+
+  const narrationDur = measuredDur ?? selectedAudio?.duration_seconds ?? null;
+  const targetCount = narrationDur
+    ? Math.min(20, Math.max(2, Math.ceil(narrationDur / Math.max(2, secondsPerImage))))
+    : scenePrompts.length;
+  const plannedPrompts = useMemo(
+    () => fitPromptsToCount(scenePrompts, targetCount || scenePrompts.length),
+    [scenePrompts, targetCount],
+  );
 
   function pickGenScript(id: string) {
     setGenScriptId(id);
     const s = scripts.find((x) => x.id === id);
     setScenePrompts(s ? parseScript(s.content ?? "").imagePrompts : []);
+    const match = audios.find((a) => a.script_id === id);
+    if (match) setAudioId(match.id);
   }
 
   async function generateOne(prompt: string, title: string) {
@@ -230,11 +290,54 @@ function ImagesPage() {
           </Select>
         </div>
 
-        {scenePrompts.length > 0 && (
+        <div className="grid gap-4 md:col-span-2 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Narração (define a quantidade de imagens)</Label>
+            <Select value={audioId} onValueChange={setAudioId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Escolher narração…" />
+              </SelectTrigger>
+              <SelectContent>
+                {audios.length === 0 ? (
+                  <div className="px-3 py-2 text-sm text-muted-foreground">Nenhum áudio salvo.</div>
+                ) : (
+                  audios.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.title}
+                      {a.duration_seconds ? ` · ${Math.round(a.duration_seconds)}s` : ""}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="spi">Segundos por imagem</Label>
+            <Input
+              id="spi"
+              type="number"
+              min={2}
+              max={30}
+              value={secondsPerImage}
+              onChange={(e) => setSecondsPerImage(Number(e.target.value) || 6)}
+            />
+            {narrationDur && (
+              <p className="text-xs text-muted-foreground">
+                Narração de {narrationDur.toFixed(1)}s → {targetCount} imagens (~
+                {(narrationDur / Math.max(1, targetCount)).toFixed(1)}s cada).
+              </p>
+            )}
+          </div>
+        </div>
+
+        {plannedPrompts.length > 0 && (
           <div className="space-y-2 md:col-span-2">
-            <Label>Cenas do roteiro ({scenePrompts.length})</Label>
+            <Label>
+              Cenas a gerar ({plannedPrompts.length})
+              {narrationDur ? " — ajustadas à duração da narração" : ""}
+            </Label>
             <ul className="space-y-2">
-              {scenePrompts.map((p, i) => (
+              {plannedPrompts.map((p, i) => (
                 <li
                   key={i}
                   className="flex items-start justify-between gap-3 rounded-lg border border-border/60 bg-background/40 p-3 text-xs"
@@ -283,8 +386,8 @@ function ImagesPage() {
           )}
           <div className="flex flex-wrap gap-2">
             <Button
-              onClick={() => generateBatch(scenePrompts)}
-              disabled={genBusy || scenePrompts.length === 0}
+              onClick={() => generateBatch(plannedPrompts)}
+              disabled={genBusy || plannedPrompts.length === 0}
               className="bg-primary text-primary-foreground"
             >
               {genBusy ? (
@@ -292,7 +395,7 @@ function ImagesPage() {
               ) : (
                 <Sparkles className="mr-2 h-4 w-4" />
               )}
-              Gerar todas as cenas
+              Gerar {plannedPrompts.length > 0 ? `${plannedPrompts.length} ` : ""}cenas
             </Button>
             <Button
               variant="outline"
