@@ -163,6 +163,7 @@ function ImagesPage() {
         }
       }
     } catch (err) {
+      console.error("Erro completo ao gerar prompts:", err);
       toast.error("Erro ao gerar prompts: " + (err as Error).message);
     } finally {
       setIsPromptGenerating(false);
