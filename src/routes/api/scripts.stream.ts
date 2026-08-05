@@ -8,6 +8,7 @@ type Body = {
   saint?: string;
   format?: "short" | "long";
   duration?: number;
+  customPrompt?: string;
 };
 
 export const Route = createFileRoute("/api/scripts/stream")({
@@ -50,13 +51,19 @@ export const Route = createFileRoute("/api/scripts/stream")({
 
         const model = "gemini-2.5-flash";
         const userPrompt = buildScriptPrompt({ topic, saint: body.saint, format, duration });
+        
+        // Merge default system prompt with custom instructions if provided
+        const finalSystemPrompt = body.customPrompt 
+          ? `${SCRIPT_SYSTEM_PROMPT}\n\nINSTRUÇÕES ADICIONAIS DO USUÁRIO:\n${body.customPrompt}`
+          : SCRIPT_SYSTEM_PROMPT;
+
         const upstream = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${encodeURIComponent(googleKey)}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              systemInstruction: { parts: [{ text: SCRIPT_SYSTEM_PROMPT }] },
+              systemInstruction: { parts: [{ text: finalSystemPrompt }] },
               contents: [{ role: "user", parts: [{ text: userPrompt }] }],
             }),
           },
