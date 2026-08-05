@@ -394,45 +394,6 @@ function ImagesPage() {
           </Button>
         </div>
 
-        <div className="grid gap-4 md:col-span-2 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label>Narração (define a quantidade de imagens)</Label>
-            <Select value={audioId} onValueChange={setAudioId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Escolher narração…" />
-              </SelectTrigger>
-              <SelectContent>
-                {audios.length === 0 ? (
-                  <div className="px-3 py-2 text-sm text-muted-foreground">Nenhum áudio salvo.</div>
-                ) : (
-                  audios.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      {a.title}
-                      {a.duration_seconds ? ` · ${Math.round(a.duration_seconds)}s` : ""}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="spi">Segundos por imagem</Label>
-            <Input
-              id="spi"
-              type="number"
-              min={2}
-              max={30}
-              value={secondsPerImage}
-              onChange={(e) => setSecondsPerImage(Number(e.target.value) || 6)}
-            />
-            {narrationDur && (
-              <p className="text-xs text-muted-foreground">
-                Narração de {narrationDur.toFixed(1)}s → {targetCount} imagens (~
-                {(narrationDur / Math.max(1, targetCount)).toFixed(1)}s cada).
-              </p>
-            )}
-          </div>
-        </div>
 
         {plannedPrompts.length > 0 && (
           <div className="mt-4 space-y-4 md:col-span-2">
