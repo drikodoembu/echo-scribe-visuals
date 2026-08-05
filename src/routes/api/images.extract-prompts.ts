@@ -29,8 +29,8 @@ export const Route = createFileRoute("/api/images/extract-prompts")({
         const prompt = `Analise o roteiro católico abaixo e sugira de 4 a 8 descrições de imagens cinematográficas (prompts) que ilustrem o conteúdo de forma profunda e reverente.
         As descrições devem ser em INGLÊS, focadas em iluminação dramática, estética sacra e alta qualidade, sem textos ou marcas d'água.
         
-        IMPORTANTE: Responda APENAS um array JSON de strings no formato: ["prompt 1", "prompt 2", ...]
-        Não inclua explicações, comentários ou outros campos.
+        IMPORTANTE: Responda APENAS um objeto JSON no formato: {"prompts": ["prompt 1", "prompt 2", ...]}
+        Não inclua explicações, comentários, blocos de código Markdown (\`\`\`json) ou outros campos.
         
         Roteiro:
         ${scriptContent}`;
@@ -57,16 +57,17 @@ export const Route = createFileRoute("/api/images/extract-prompts")({
 
         const json = await upstream.json();
         const content = (json.choices?.[0]?.message?.content || "").trim();
+        console.log("AI Raw Content:", content);
         
         try {
-          // Attempt to find any array in the JSON response
-          const parsed = JSON.parse(content);
+          // Clean possible markdown blocks
+          const cleaned = content.replace(/^```json\s*|```$/g, "").trim();
+          const parsed = JSON.parse(cleaned);
           let prompts: string[] = [];
           
           if (Array.isArray(parsed)) {
             prompts = parsed;
           } else if (typeof parsed === 'object' && parsed !== null) {
-            // Check common keys
             const candidates = ['prompts', 'results', 'images', 'items', 'data'];
             for (const key of candidates) {
               if (Array.isArray(parsed[key])) {
@@ -74,31 +75,33 @@ export const Route = createFileRoute("/api/images/extract-prompts")({
                 break;
               }
             }
-            
-            // If still no array, take the first array found in values
             if (prompts.length === 0) {
               const firstArray = Object.values(parsed).find(v => Array.isArray(v));
               if (Array.isArray(firstArray)) prompts = firstArray as string[];
             }
           }
 
-          // Filter out non-string elements just in case
-          prompts = prompts.filter(p => typeof p === 'string');
+          prompts = prompts.filter(p => typeof p === 'string' && p.length > 5);
+
+          if (prompts.length === 0) {
+            throw new Error("No prompts found in JSON structure");
+          }
 
           return Response.json({ prompts });
         } catch (e) {
-          // Fallback: search for JSON array pattern in text
+          console.error("Parse error:", e, "Content:", content);
+          // Fallback: regex for strings in quotes within brackets
           const arrayMatch = content.match(/\[\s*".*?"\s*(?:,\s*".*?"\s*)*\]/s);
           if (arrayMatch) {
             try {
               const prompts = JSON.parse(arrayMatch[0]);
               if (Array.isArray(prompts)) {
-                return Response.json({ prompts: prompts.filter(p => typeof p === 'string') });
+                return Response.json({ prompts: prompts.filter(p => typeof p === 'string' && p.length > 5) });
               }
             } catch (e2) {}
           }
           
-          return new Response(`Failed to parse AI response: ${content}`, { status: 500 });
+          return new Response(`Falha ao processar resposta da IA: ${content}`, { status: 500 });
         }
       },
     },

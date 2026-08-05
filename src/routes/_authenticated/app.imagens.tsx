@@ -158,7 +158,7 @@ function ImagesPage() {
           toast.success(`${data.prompts.length} prompts de cena gerados com sucesso!`);
         } else {
           console.warn("API retornou sucesso mas sem prompts:", data);
-          toast.error("A IA não conseguiu extrair prompts válidos do roteiro.");
+          toast.error("A IA não conseguiu extrair prompts válidos do roteiro. Tente outro roteiro ou gere manualmente.");
           setScenePrompts([]);
         }
       }
