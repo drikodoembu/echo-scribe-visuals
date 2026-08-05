@@ -281,14 +281,30 @@ function AudioPage() {
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="gen-title">Título</Label>
-          <Input
-            id="gen-title"
-            value={genTitle}
-            onChange={(e) => setGenTitle(e.target.value)}
-            placeholder="Ex.: Narração — Perdão"
-          />
+        <div className="grid gap-4 md:col-span-2 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="gen-title">Título</Label>
+            <Input
+              id="gen-title"
+              value={genTitle}
+              onChange={(e) => setGenTitle(e.target.value)}
+              placeholder="Ex.: Narração — Perdão"
+            />
+          </div>
+          <div className="flex items-end">
+            <Button
+              onClick={generateNarration}
+              disabled={generating || !genText.trim()}
+              className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
+            >
+              {generating ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="mr-2 h-4 w-4" />
+              )}
+              Gerar narração agora
+            </Button>
+          </div>
         </div>
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="gen-text">Texto para narrar</Label>
@@ -301,20 +317,6 @@ function AudioPage() {
             maxLength={5000}
           />
           <p className="text-xs text-muted-foreground">{genText.length} / 5000</p>
-        </div>
-        <div className="md:col-span-2">
-          <Button
-            onClick={generateNarration}
-            disabled={generating || !genText.trim()}
-            className="bg-primary text-primary-foreground"
-          >
-            {generating ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Sparkles className="mr-2 h-4 w-4" />
-            )}
-            Gerar narração
-          </Button>
         </div>
       </div>
 
