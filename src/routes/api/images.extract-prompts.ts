@@ -58,18 +58,25 @@ export const Route = createFileRoute("/api/images/extract-prompts")({
         try {
           const parsed = JSON.parse(content);
           // Handle case where AI returns { "prompts": [...] } or just [...]
-          const prompts = Array.isArray(parsed) ? parsed : (parsed.prompts || Object.values(parsed)[0]);
+          let prompts = Array.isArray(parsed) ? parsed : (parsed.prompts || parsed.results || Object.values(parsed)[0]);
+          
+          if (!Array.isArray(prompts) && typeof parsed === 'object' && parsed !== null) {
+            // If it's still not an array, look for any array inside the object
+            const possibleArray = Object.values(parsed).find(v => Array.isArray(v));
+            if (possibleArray) prompts = possibleArray;
+          }
+
           return Response.json({ prompts: Array.isArray(prompts) ? prompts : [] });
         } catch (e) {
           // Fallback parsing if JSON is slightly malformed but contains an array
-          const match = content.match(/\[.*\]/s);
+          const match = content.match(/\[\s*".*?"\s*(?:,\s*".*?"\s*)*\]/s);
           if (match) {
             try {
               const prompts = JSON.parse(match[0]);
               return Response.json({ prompts });
             } catch (e2) {}
           }
-          return new Response("Failed to parse AI response", { status: 500 });
+          return new Response(`Failed to parse AI response: ${content}`, { status: 500 });
         }
       },
     },
