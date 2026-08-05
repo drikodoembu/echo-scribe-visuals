@@ -81,6 +81,7 @@ function ImagesPage() {
 
   const [genScriptId, setGenScriptId] = useState<string>("");
   const [scenePrompts, setScenePrompts] = useState<string[]>([]);
+  const [isPromptGenerating, setIsPromptGenerating] = useState(false);
   const [freePrompt, setFreePrompt] = useState("");
   const [aspect, setAspect] = useState<"9:16" | "16:9" | "1:1">("9:16");
   const [genBusy, setGenBusy] = useState(false);
@@ -119,10 +120,33 @@ function ImagesPage() {
 
   function pickGenScript(id: string) {
     setGenScriptId(id);
-    const s = scripts.find((x) => x.id === id);
-    setScenePrompts(s ? parseScript(s.content ?? "").imagePrompts : []);
     const match = audios.find((a) => a.script_id === id);
     if (match) setAudioId(match.id);
+    // Reset prompts when script changes
+    setScenePrompts([]);
+  }
+
+  async function generatePromptsFromScript() {
+    if (!genScriptId) return;
+    setIsPromptGenerating(true);
+    try {
+      const s = scripts.find((x) => x.id === genScriptId);
+      if (s) {
+        // Here we can either just parse the existing ones or use an AI to refine them
+        // For now, let's parse from the script content as Brother Gabriel already includes them
+        const parsed = parseScript(s.content ?? "");
+        setScenePrompts(parsed.imagePrompts);
+        if (parsed.imagePrompts.length === 0) {
+          toast.error("Nenhum prompt de imagem encontrado no roteiro.");
+        } else {
+          toast.success(`${parsed.imagePrompts.length} prompts de cena gerados!`);
+        }
+      }
+    } catch (err) {
+      toast.error("Erro ao gerar prompts.");
+    } finally {
+      setIsPromptGenerating(false);
+    }
   }
 
   async function generateOne(prompt: string, title: string) {
@@ -252,9 +276,9 @@ function ImagesPage() {
 
       <div className="grid gap-4 rounded-xl border border-gold/30 bg-card/60 p-5 md:grid-cols-2">
         <div className="md:col-span-2">
-          <h2 className="font-display text-lg text-gold">Gerar cenas com IA</h2>
+          <h2 className="font-display text-lg text-gold">Gerador de Cenas</h2>
           <p className="text-xs text-muted-foreground">
-            Usa os prompts de imagem do roteiro. Cada cena é salva na sua biblioteca.
+            Selecione o roteiro e a narração para definir o tempo e a quantidade de cenas.
           </p>
         </div>
         <div className="space-y-2">
