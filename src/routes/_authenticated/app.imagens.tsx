@@ -192,17 +192,25 @@ function ImagesPage() {
     setGenBusy(true);
     setGenProgress({ done: 0, total: prompts.length });
     let ok = 0;
+    
+    // Batch processing to avoid long-running loops failing silently
     for (let i = 0; i < prompts.length; i++) {
       try {
+        console.log(`Iniciando geração da cena ${i + 1}/${prompts.length}`);
         await generateOne(prompts[i], `Cena ${i + 1}`);
         ok++;
+        toast.success(`Cena ${i + 1} gerada com sucesso.`);
       } catch (err) {
+        console.error(`Erro na cena ${i + 1}:`, err);
         toast.error(`Cena ${i + 1}: ${(err as Error).message}`);
+        // If it's a critical error (like auth), we might want to stop
+        if ((err as Error).message.includes("Unauthorized")) break;
       } finally {
         setGenProgress((p) => ({ ...p, done: p.done + 1 }));
       }
     }
-    if (ok > 0) toast.success(`${ok} imagem(ns) gerada(s).`);
+    
+    if (ok > 0) toast.success(`Concluído: ${ok} de ${prompts.length} imagens geradas.`);
     setGenBusy(false);
     qc.invalidateQueries({ queryKey: ["image_assets"] });
   }
