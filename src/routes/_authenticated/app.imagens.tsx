@@ -281,6 +281,22 @@ function ImagesPage() {
             Selecione o roteiro e a narração para definir o tempo e a quantidade de cenas.
           </p>
         </div>
+
+        <div className="flex items-end md:col-span-2">
+          <Button
+            variant="outline"
+            className="w-full border-gold/30 text-gold hover:bg-gold/10"
+            onClick={generatePromptsFromScript}
+            disabled={!genScriptId || isPromptGenerating}
+          >
+            {isPromptGenerating ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="mr-2 h-4 w-4" />
+            )}
+            Gerar prompts das cenas do roteiro
+          </Button>
+        </div>
         <div className="space-y-2">
           <Label>Roteiro</Label>
           <Select value={genScriptId} onValueChange={pickGenScript}>
@@ -355,6 +371,13 @@ function ImagesPage() {
         </div>
 
         {plannedPrompts.length > 0 && (
+          <div className="mt-4 space-y-4 md:col-span-2">
+            <div className="border-t border-gold/20 pt-4">
+              <h3 className="mb-2 font-display text-base text-gold">Opção de gerar cenas</h3>
+              <p className="mb-4 text-xs text-muted-foreground">
+                Revise os prompts gerados abaixo e clique no botão principal para criar todas as imagens.
+              </p>
+            </div>
           <div className="space-y-2 md:col-span-2">
             <Label>
               Cenas a gerar ({plannedPrompts.length})
