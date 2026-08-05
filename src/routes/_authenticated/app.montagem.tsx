@@ -36,13 +36,23 @@ function MontagemPage() {
   const { data: images = [] } = useQuery({ queryKey: ["image_assets"], queryFn: () => listImg() });
   const { data: musics = [] } = useQuery({ queryKey: ["music_tracks"], queryFn: () => listMus() });
 
-  const [scriptId, setScriptId] = useState<string>("");
-  const [audioId, setAudioId] = useState<string>("");
-  const [musicId, setMusicId] = useState<string>("");
+  const STORAGE_KEY = "montagem:draft:v1";
+  const initial = (() => {
+    if (typeof window === "undefined") return { scriptId: "", audioId: "", musicId: "", format: "9:16" as const, sceneDuration: 5, useNarrationLen: true };
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return { scriptId: "", audioId: "", musicId: "", format: "9:16" as const, sceneDuration: 5, useNarrationLen: true };
+  })();
+
+  const [scriptId, setScriptId] = useState<string>(initial.scriptId);
+  const [audioId, setAudioId] = useState<string>(initial.audioId);
+  const [musicId, setMusicId] = useState<string>(initial.musicId);
   const [scenes, setScenes] = useState<SceneImg[]>([]);
-  const [format, setFormat] = useState<"9:16" | "16:9">("9:16");
-  const [sceneDuration, setSceneDuration] = useState<number>(5);
-  const [useNarrationLen, setUseNarrationLen] = useState<boolean>(true);
+  const [format, setFormat] = useState<"9:16" | "16:9">(initial.format);
+  const [sceneDuration, setSceneDuration] = useState<number>(initial.sceneDuration);
+  const [useNarrationLen, setUseNarrationLen] = useState<boolean>(initial.useNarrationLen);
   const [musicVolume, setMusicVolume] = useState<number>(0.2);
   const [musicTempo, setMusicTempo] = useState<number>(1);
   const [musicPitchSemitones, setMusicPitchSemitones] = useState<number>(0);
@@ -55,6 +65,11 @@ function MontagemPage() {
   const logRef = useRef<HTMLPreElement | null>(null);
   const progressWindow = useRef({ base: 0, span: 99 });
   const [log, setLog] = useState<string>("");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ scriptId, audioId, musicId, format, sceneDuration, useNarrationLen }));
+  }, [scriptId, audioId, musicId, format, sceneDuration, useNarrationLen]);
 
   const selectedAudio = audios.find((a) => a.id === audioId);
   const selectedMusic = musics.find((m) => m.id === musicId);
