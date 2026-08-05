@@ -378,31 +378,32 @@ function ImagesPage() {
                 Revise os prompts gerados abaixo e clique no botão principal para criar todas as imagens.
               </p>
             </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label>
-              Cenas a gerar ({plannedPrompts.length})
-              {narrationDur ? " — ajustadas à duração da narração" : ""}
-            </Label>
-            <ul className="space-y-2">
-              {plannedPrompts.map((p, i) => (
-                <li
-                  key={i}
-                  className="flex items-start justify-between gap-3 rounded-lg border border-border/60 bg-background/40 p-3 text-xs"
-                >
-                  <span className="leading-relaxed">
-                    <strong className="text-gold">Cena {i + 1}.</strong> {p}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={genBusy}
-                    onClick={() => generateBatch([p])}
+            <div className="space-y-2">
+              <Label>
+                Cenas a gerar ({plannedPrompts.length})
+                {narrationDur ? " — ajustadas à duração da narração" : ""}
+              </Label>
+              <ul className="space-y-2">
+                {plannedPrompts.map((p, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start justify-between gap-3 rounded-lg border border-border/60 bg-background/40 p-3 text-xs"
                   >
-                    Gerar
-                  </Button>
-                </li>
-              ))}
-            </ul>
+                    <span className="leading-relaxed">
+                      <strong className="text-gold">Cena {i + 1}.</strong> {p}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={genBusy}
+                      onClick={() => generateBatch([p])}
+                    >
+                      Gerar
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         )}
 
