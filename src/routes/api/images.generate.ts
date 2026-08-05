@@ -57,9 +57,10 @@ export const Route = createFileRoute("/api/images/generate")({
           },
           body: JSON.stringify({
             model: "google/gemini-3-pro-image",
-            prompt: fullPrompt, // Correct field for image generation is usually 'prompt'
+            prompt: fullPrompt,
             n: 1,
-            size: aspect === "9:16" ? "1024x1792" : aspect === "16:9" ? "1792x1024" : "1024x1024"
+            size: aspect === "9:16" ? "1024x1792" : aspect === "16:9" ? "1792x1024" : "1024x1024",
+            response_format: "url"
           }),
         });
 
