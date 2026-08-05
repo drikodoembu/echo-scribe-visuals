@@ -132,18 +132,30 @@ function ImagesPage() {
     try {
       const s = scripts.find((x) => x.id === genScriptId);
       if (s) {
-        // Here we can either just parse the existing ones or use an AI to refine them
-        // For now, let's parse from the script content as Brother Gabriel already includes them
-        const parsed = parseScript(s.content ?? "");
-        setScenePrompts(parsed.imagePrompts);
-        if (parsed.imagePrompts.length === 0) {
-          toast.error("Nenhum prompt de imagem encontrado no roteiro.");
+        const { data: sess } = await supabase.auth.getSession();
+        const token = sess.session?.access_token;
+        if (!token) throw new Error("Sessão expirada.");
+
+        // We call a new endpoint to extract/generate prompts from the clean script
+        const res = await fetch("/api/images/extract-prompts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ scriptContent: s.content }),
+        });
+
+        if (!res.ok) throw new Error("Falha ao gerar prompts via IA.");
+        const data = await res.json();
+        const prompts = data.prompts || [];
+
+        setScenePrompts(prompts);
+        if (prompts.length === 0) {
+          toast.error("A IA não conseguiu extrair prompts deste roteiro.");
         } else {
-          toast.success(`${parsed.imagePrompts.length} prompts de cena gerados!`);
+          toast.success(`${prompts.length} prompts de cena sugeridos pela IA!`);
         }
       }
     } catch (err) {
-      toast.error("Erro ao gerar prompts.");
+      toast.error("Erro ao gerar prompts: " + (err as Error).message);
     } finally {
       setIsPromptGenerating(false);
     }
