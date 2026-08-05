@@ -104,8 +104,6 @@ function ImagesPage() {
     if (typeof window === "undefined") return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ genScriptId, audioId, aspect, secondsPerImage, scriptId }));
   }, [genScriptId, audioId, aspect, secondsPerImage, scriptId]);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ genScriptId, audioId, aspect, secondsPerImage, scriptId }));
-  }, [genScriptId, audioId, aspect, secondsPerImage, scriptId]);
 
   const selectedAudio = audios.find((a) => a.id === audioId);
 
