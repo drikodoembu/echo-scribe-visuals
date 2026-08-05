@@ -211,15 +211,24 @@ function MontagemPage() {
 
         const zoomIn = i % 2 === 0;
         const zExpr = zoomIn
-          ? `1+0.16*on/${perFrames}`
-          : `1.16-0.16*on/${perFrames}`;
+          ? `1+0.25*on/${perFrames}`
+          : `1.25-0.25*on/${perFrames}`;
+        
+        // Efeito Ken Burns aprimorado: movimento linear suave
+        // Garantimos que a imagem preencha a tela e se mova suavemente
         const dir = i % 4;
-        let xExpr = `iw/2-(iw/zoom/2)`;
-        let yExpr = `ih/2-(ih/zoom/2)`;
-        if (dir === 0) xExpr = `(iw-iw/zoom)*(on/${perFrames})`;
-        else if (dir === 1) xExpr = `(iw-iw/zoom)*(1-on/${perFrames})`;
-        else if (dir === 2) yExpr = `(ih-ih/zoom)*(on/${perFrames})`;
-        else yExpr = `(ih-ih/zoom)*(1-on/${perFrames})`;
+        let xExpr = `(iw-iw/zoom)/2`;
+        let yExpr = `(ih-ih/zoom)/2`;
+        
+        if (dir === 0) { // Esquerda para Direita
+          xExpr = `(iw-iw/zoom)*(on/${perFrames})`;
+        } else if (dir === 1) { // Direita para Esquerda
+          xExpr = `(iw-iw/zoom)*(1-on/${perFrames})`;
+        } else if (dir === 2) { // Cima para Baixo
+          yExpr = `(ih-ih/zoom)*(on/${perFrames})`;
+        } else { // Baixo para Cima
+          yExpr = `(ih-ih/zoom)*(1-on/${perFrames})`;
+        }
 
         const sw = Math.round(w * 1.5);
         const sh = Math.round(h * 1.5);
