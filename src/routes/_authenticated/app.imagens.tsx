@@ -129,6 +129,8 @@ function ImagesPage() {
   async function generatePromptsFromScript() {
     if (!genScriptId) return;
     setIsPromptGenerating(true);
+    setScenePrompts([]); // Clear old ones immediately
+    toast.info("Iniciando análise do roteiro para sugestão de imagens...");
     try {
       const s = scripts.find((x) => x.id === genScriptId);
       if (s) {
@@ -143,7 +145,11 @@ function ImagesPage() {
           body: JSON.stringify({ scriptContent: s.content }),
         });
 
-        if (!res.ok) throw new Error("Falha ao gerar prompts via IA.");
+        if (!res.ok) {
+          const errText = await res.text().catch(() => "Erro desconhecido");
+          throw new Error(`Falha ao gerar prompts via IA: ${errText}`);
+        }
+        
         const data = await res.json();
         const prompts = data.prompts || [];
 
@@ -154,6 +160,12 @@ function ImagesPage() {
           toast.success(`${prompts.length} prompts de cena sugeridos pela IA!`);
         }
       }
+    } catch (err) {
+      toast.error("Erro ao gerar prompts: " + (err as Error).message);
+    } finally {
+      setIsPromptGenerating(false);
+    }
+  }
     } catch (err) {
       toast.error("Erro ao gerar prompts: " + (err as Error).message);
     } finally {
