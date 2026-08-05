@@ -73,12 +73,6 @@ function ImagesPage() {
     queryFn: () => listAud(),
   });
 
-  const [scriptId, setScriptId] = useState<string>("");
-  const [files, setFiles] = useState<File[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState({ done: 0, total: 0 });
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
   const STORAGE_KEY = "imagens:draft:v1";
   const initial = (() => {
     if (typeof window === "undefined") return { genScriptId: "", audioId: "", aspect: "9:16" as const, secondsPerImage: 6, scriptId: "" };
@@ -108,6 +102,8 @@ function ImagesPage() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ genScriptId, audioId, aspect, secondsPerImage, scriptId }));
+  }, [genScriptId, audioId, aspect, secondsPerImage, scriptId]);
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ genScriptId, audioId, aspect, secondsPerImage, scriptId }));
   }, [genScriptId, audioId, aspect, secondsPerImage, scriptId]);
 
