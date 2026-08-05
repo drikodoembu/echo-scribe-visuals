@@ -389,9 +389,33 @@ function MontagemPage() {
         </div>
 
         {scenes.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Nenhuma cena adicionada. Escolha imagens abaixo — cada cena receberá um efeito de pan/zoom automático.
-          </p>
+          <div className="flex flex-col items-center justify-center space-y-4 rounded-lg border border-dashed border-gold/30 py-10 text-center">
+            <Film className="h-10 w-10 text-gold/40" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-primary">Nenhuma cena adicionada</p>
+              <p className="text-xs text-muted-foreground">
+                Escolha as imagens na biblioteca abaixo para compor o vídeo.
+              </p>
+            </div>
+            {scriptId && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-gold/30 text-gold hover:bg-gold/10"
+                onClick={() => {
+                  const scriptImgs = images.filter(i => i.script_id === scriptId && i.signed_url);
+                  if (scriptImgs.length > 0) {
+                    scriptImgs.forEach(img => addScene(img as any));
+                    toast.success(`${scriptImgs.length} imagens do roteiro adicionadas.`);
+                  } else {
+                    toast.error("Nenhuma imagem vinculada a este roteiro.");
+                  }
+                }}
+              >
+                Adicionar todas do roteiro
+              </Button>
+            )}
+          </div>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {scenes.map((s, i) => (

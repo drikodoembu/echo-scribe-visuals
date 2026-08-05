@@ -81,6 +81,7 @@ function ImagesPage() {
 
   const [genScriptId, setGenScriptId] = useState<string>("");
   const [scenePrompts, setScenePrompts] = useState<string[]>([]);
+  const [isPromptGenerating, setIsPromptGenerating] = useState(false);
   const [freePrompt, setFreePrompt] = useState("");
   const [aspect, setAspect] = useState<"9:16" | "16:9" | "1:1">("9:16");
   const [genBusy, setGenBusy] = useState(false);
@@ -119,10 +120,33 @@ function ImagesPage() {
 
   function pickGenScript(id: string) {
     setGenScriptId(id);
-    const s = scripts.find((x) => x.id === id);
-    setScenePrompts(s ? parseScript(s.content ?? "").imagePrompts : []);
     const match = audios.find((a) => a.script_id === id);
     if (match) setAudioId(match.id);
+    // Reset prompts when script changes
+    setScenePrompts([]);
+  }
+
+  async function generatePromptsFromScript() {
+    if (!genScriptId) return;
+    setIsPromptGenerating(true);
+    try {
+      const s = scripts.find((x) => x.id === genScriptId);
+      if (s) {
+        // Here we can either just parse the existing ones or use an AI to refine them
+        // For now, let's parse from the script content as Brother Gabriel already includes them
+        const parsed = parseScript(s.content ?? "");
+        setScenePrompts(parsed.imagePrompts);
+        if (parsed.imagePrompts.length === 0) {
+          toast.error("Nenhum prompt de imagem encontrado no roteiro.");
+        } else {
+          toast.success(`${parsed.imagePrompts.length} prompts de cena gerados!`);
+        }
+      }
+    } catch (err) {
+      toast.error("Erro ao gerar prompts.");
+    } finally {
+      setIsPromptGenerating(false);
+    }
   }
 
   async function generateOne(prompt: string, title: string) {
@@ -252,10 +276,26 @@ function ImagesPage() {
 
       <div className="grid gap-4 rounded-xl border border-gold/30 bg-card/60 p-5 md:grid-cols-2">
         <div className="md:col-span-2">
-          <h2 className="font-display text-lg text-gold">Gerar cenas com IA</h2>
+          <h2 className="font-display text-lg text-gold">Gerador de Cenas</h2>
           <p className="text-xs text-muted-foreground">
-            Usa os prompts de imagem do roteiro. Cada cena é salva na sua biblioteca.
+            Selecione o roteiro e a narração para definir o tempo e a quantidade de cenas.
           </p>
+        </div>
+
+        <div className="flex items-end md:col-span-2">
+          <Button
+            variant="outline"
+            className="w-full border-gold/30 text-gold hover:bg-gold/10"
+            onClick={generatePromptsFromScript}
+            disabled={!genScriptId || isPromptGenerating}
+          >
+            {isPromptGenerating ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="mr-2 h-4 w-4" />
+            )}
+            Gerar prompts das cenas do roteiro
+          </Button>
         </div>
         <div className="space-y-2">
           <Label>Roteiro</Label>
@@ -331,31 +371,39 @@ function ImagesPage() {
         </div>
 
         {plannedPrompts.length > 0 && (
-          <div className="space-y-2 md:col-span-2">
-            <Label>
-              Cenas a gerar ({plannedPrompts.length})
-              {narrationDur ? " — ajustadas à duração da narração" : ""}
-            </Label>
-            <ul className="space-y-2">
-              {plannedPrompts.map((p, i) => (
-                <li
-                  key={i}
-                  className="flex items-start justify-between gap-3 rounded-lg border border-border/60 bg-background/40 p-3 text-xs"
-                >
-                  <span className="leading-relaxed">
-                    <strong className="text-gold">Cena {i + 1}.</strong> {p}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={genBusy}
-                    onClick={() => generateBatch([p])}
+          <div className="mt-4 space-y-4 md:col-span-2">
+            <div className="border-t border-gold/20 pt-4">
+              <h3 className="mb-2 font-display text-base text-gold">Opção de gerar cenas</h3>
+              <p className="mb-4 text-xs text-muted-foreground">
+                Revise os prompts gerados abaixo e clique no botão principal para criar todas as imagens.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>
+                Cenas a gerar ({plannedPrompts.length})
+                {narrationDur ? " — ajustadas à duração da narração" : ""}
+              </Label>
+              <ul className="space-y-2">
+                {plannedPrompts.map((p, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start justify-between gap-3 rounded-lg border border-border/60 bg-background/40 p-3 text-xs"
                   >
-                    Gerar
-                  </Button>
-                </li>
-              ))}
-            </ul>
+                    <span className="leading-relaxed">
+                      <strong className="text-gold">Cena {i + 1}.</strong> {p}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={genBusy}
+                      onClick={() => generateBatch([p])}
+                    >
+                      Gerar
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         )}
 
