@@ -152,13 +152,14 @@ function ImagesPage() {
         
         const data = await res.json();
         console.log("Prompts recebidos da API:", data);
-        const prompts = Array.isArray(data.prompts) ? data.prompts : [];
-
-        setScenePrompts(prompts);
-        if (prompts.length === 0) {
-          toast.error("A IA retornou uma lista vazia de prompts.");
+        
+        if (data && Array.isArray(data.prompts) && data.prompts.length > 0) {
+          setScenePrompts(data.prompts);
+          toast.success(`${data.prompts.length} prompts de cena gerados com sucesso!`);
         } else {
-          toast.success(`${prompts.length} prompts de cena gerados com sucesso!`);
+          console.warn("API retornou sucesso mas sem prompts:", data);
+          toast.error("A IA não conseguiu extrair prompts válidos do roteiro.");
+          setScenePrompts([]);
         }
       }
     } catch (err) {
