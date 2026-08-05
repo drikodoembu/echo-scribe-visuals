@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Download, Loader2, Mic, Sparkles, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -57,7 +57,17 @@ function AudioPage() {
     queryFn: () => listScr(),
   });
 
-  const [scriptId, setScriptId] = useState<string>("");
+  const STORAGE_KEY = "audio:draft:v1";
+  const initial = (() => {
+    if (typeof window === "undefined") return { genScriptId: "", genTitle: "", genText: "", voice: "coral", scriptId: "" };
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return { genScriptId: "", genTitle: "", genText: "", voice: "coral", scriptId: "" };
+  })();
+
+  const [scriptId, setScriptId] = useState<string>(initial.scriptId);
   const [title, setTitle] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -65,11 +75,16 @@ function AudioPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const [genScriptId, setGenScriptId] = useState<string>("");
-  const [genTitle, setGenTitle] = useState("");
-  const [genText, setGenText] = useState("");
-  const [voice, setVoice] = useState("coral");
+  const [genScriptId, setGenScriptId] = useState<string>(initial.genScriptId);
+  const [genTitle, setGenTitle] = useState(initial.genTitle);
+  const [genText, setGenText] = useState(initial.genText);
+  const [voice, setVoice] = useState(initial.voice);
   const [generating, setGenerating] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ genScriptId, genTitle, genText, voice, scriptId }));
+  }, [genScriptId, genTitle, genText, voice, scriptId]);
 
   function pickGenScript(id: string) {
     setGenScriptId(id);

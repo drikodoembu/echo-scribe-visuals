@@ -36,13 +36,23 @@ function MontagemPage() {
   const { data: images = [] } = useQuery({ queryKey: ["image_assets"], queryFn: () => listImg() });
   const { data: musics = [] } = useQuery({ queryKey: ["music_tracks"], queryFn: () => listMus() });
 
-  const [scriptId, setScriptId] = useState<string>("");
-  const [audioId, setAudioId] = useState<string>("");
-  const [musicId, setMusicId] = useState<string>("");
+  const STORAGE_KEY = "montagem:draft:v1";
+  const initial = (() => {
+    if (typeof window === "undefined") return { scriptId: "", audioId: "", musicId: "", format: "9:16" as const, sceneDuration: 5, useNarrationLen: true };
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return { scriptId: "", audioId: "", musicId: "", format: "9:16" as const, sceneDuration: 5, useNarrationLen: true };
+  })();
+
+  const [scriptId, setScriptId] = useState<string>(initial.scriptId);
+  const [audioId, setAudioId] = useState<string>(initial.audioId);
+  const [musicId, setMusicId] = useState<string>(initial.musicId);
   const [scenes, setScenes] = useState<SceneImg[]>([]);
-  const [format, setFormat] = useState<"9:16" | "16:9">("9:16");
-  const [sceneDuration, setSceneDuration] = useState<number>(5);
-  const [useNarrationLen, setUseNarrationLen] = useState<boolean>(true);
+  const [format, setFormat] = useState<"9:16" | "16:9">(initial.format);
+  const [sceneDuration, setSceneDuration] = useState<number>(initial.sceneDuration);
+  const [useNarrationLen, setUseNarrationLen] = useState<boolean>(initial.useNarrationLen);
   const [musicVolume, setMusicVolume] = useState<number>(0.2);
   const [musicTempo, setMusicTempo] = useState<number>(1);
   const [musicPitchSemitones, setMusicPitchSemitones] = useState<number>(0);
@@ -55,6 +65,11 @@ function MontagemPage() {
   const logRef = useRef<HTMLPreElement | null>(null);
   const progressWindow = useRef({ base: 0, span: 99 });
   const [log, setLog] = useState<string>("");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ scriptId, audioId, musicId, format, sceneDuration, useNarrationLen }));
+  }, [scriptId, audioId, musicId, format, sceneDuration, useNarrationLen]);
 
   const selectedAudio = audios.find((a) => a.id === audioId);
   const selectedMusic = musics.find((m) => m.id === musicId);
@@ -211,15 +226,24 @@ function MontagemPage() {
 
         const zoomIn = i % 2 === 0;
         const zExpr = zoomIn
-          ? `1+0.16*on/${perFrames}`
-          : `1.16-0.16*on/${perFrames}`;
+          ? `1+0.25*on/${perFrames}`
+          : `1.25-0.25*on/${perFrames}`;
+        
+        // Efeito Ken Burns aprimorado: movimento linear suave
+        // Garantimos que a imagem preencha a tela e se mova suavemente
         const dir = i % 4;
-        let xExpr = `iw/2-(iw/zoom/2)`;
-        let yExpr = `ih/2-(ih/zoom/2)`;
-        if (dir === 0) xExpr = `(iw-iw/zoom)*(on/${perFrames})`;
-        else if (dir === 1) xExpr = `(iw-iw/zoom)*(1-on/${perFrames})`;
-        else if (dir === 2) yExpr = `(ih-ih/zoom)*(on/${perFrames})`;
-        else yExpr = `(ih-ih/zoom)*(1-on/${perFrames})`;
+        let xExpr = `(iw-iw/zoom)/2`;
+        let yExpr = `(ih-ih/zoom)/2`;
+        
+        if (dir === 0) { // Esquerda para Direita
+          xExpr = `(iw-iw/zoom)*(on/${perFrames})`;
+        } else if (dir === 1) { // Direita para Esquerda
+          xExpr = `(iw-iw/zoom)*(1-on/${perFrames})`;
+        } else if (dir === 2) { // Cima para Baixo
+          yExpr = `(ih-ih/zoom)*(on/${perFrames})`;
+        } else { // Baixo para Cima
+          yExpr = `(ih-ih/zoom)*(1-on/${perFrames})`;
+        }
 
         const sw = Math.round(w * 1.5);
         const sh = Math.round(h * 1.5);

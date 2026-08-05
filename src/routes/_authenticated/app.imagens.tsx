@@ -73,22 +73,37 @@ function ImagesPage() {
     queryFn: () => listAud(),
   });
 
-  const [scriptId, setScriptId] = useState<string>("");
+  const STORAGE_KEY = "imagens:draft:v1";
+  const initial = (() => {
+    if (typeof window === "undefined") return { genScriptId: "", audioId: "", aspect: "9:16" as const, secondsPerImage: 6, scriptId: "" };
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return { genScriptId: "", audioId: "", aspect: "9:16" as const, secondsPerImage: 6, scriptId: "" };
+  })();
+
+  const [scriptId, setScriptId] = useState<string>(initial.scriptId);
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const [genScriptId, setGenScriptId] = useState<string>("");
+  const [genScriptId, setGenScriptId] = useState<string>(initial.genScriptId);
   const [scenePrompts, setScenePrompts] = useState<string[]>([]);
   const [isPromptGenerating, setIsPromptGenerating] = useState(false);
   const [freePrompt, setFreePrompt] = useState("");
-  const [aspect, setAspect] = useState<"9:16" | "16:9" | "1:1">("9:16");
+  const [aspect, setAspect] = useState<"9:16" | "16:9" | "1:1">(initial.aspect);
   const [genBusy, setGenBusy] = useState(false);
   const [genProgress, setGenProgress] = useState({ done: 0, total: 0 });
-  const [audioId, setAudioId] = useState<string>("");
-  const [secondsPerImage, setSecondsPerImage] = useState<number>(6);
+  const [audioId, setAudioId] = useState<string>(initial.audioId);
+  const [secondsPerImage, setSecondsPerImage] = useState<number>(initial.secondsPerImage);
   const [measuredDur, setMeasuredDur] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ genScriptId, audioId, aspect, secondsPerImage, scriptId }));
+  }, [genScriptId, audioId, aspect, secondsPerImage, scriptId]);
 
   const selectedAudio = audios.find((a) => a.id === audioId);
 
