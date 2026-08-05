@@ -28,7 +28,9 @@ export const Route = createFileRoute("/api/images/extract-prompts")({
 
         const prompt = `Analise o roteiro católico abaixo e sugira de 4 a 8 descrições de imagens cinematográficas (prompts) que ilustrem o conteúdo de forma profunda e reverente.
         As descrições devem ser em INGLÊS, focadas em iluminação dramática, estética sacra e alta qualidade, sem textos ou marcas d'água.
-        Responda APENAS um array JSON de strings no formato: ["prompt 1", "prompt 2", ...]
+        
+        IMPORTANTE: Responda APENAS um array JSON de strings no formato: ["prompt 1", "prompt 2", ...]
+        Não inclua explicações, comentários ou outros campos.
         
         Roteiro:
         ${scriptContent}`;
@@ -43,7 +45,8 @@ export const Route = createFileRoute("/api/images/extract-prompts")({
             model: "google/gemini-2.0-flash",
             messages: [{ role: "user", content: prompt }],
             response_format: { type: "json_object" },
-            temperature: 0.2,
+            temperature: 0.1,
+            max_tokens: 2000,
           }),
         });
 
@@ -53,29 +56,48 @@ export const Route = createFileRoute("/api/images/extract-prompts")({
         }
 
         const json = await upstream.json();
-        const content = json.choices?.[0]?.message?.content || "";
+        const content = (json.choices?.[0]?.message?.content || "").trim();
         
         try {
+          // Attempt to find any array in the JSON response
           const parsed = JSON.parse(content);
-          // Handle case where AI returns { "prompts": [...] } or just [...]
-          let prompts = Array.isArray(parsed) ? parsed : (parsed.prompts || parsed.results || Object.values(parsed)[0]);
+          let prompts: string[] = [];
           
-          if (!Array.isArray(prompts) && typeof parsed === 'object' && parsed !== null) {
-            // If it's still not an array, look for any array inside the object
-            const possibleArray = Object.values(parsed).find(v => Array.isArray(v));
-            if (possibleArray) prompts = possibleArray;
+          if (Array.isArray(parsed)) {
+            prompts = parsed;
+          } else if (typeof parsed === 'object' && parsed !== null) {
+            // Check common keys
+            const candidates = ['prompts', 'results', 'images', 'items', 'data'];
+            for (const key of candidates) {
+              if (Array.isArray(parsed[key])) {
+                prompts = parsed[key];
+                break;
+              }
+            }
+            
+            // If still no array, take the first array found in values
+            if (prompts.length === 0) {
+              const firstArray = Object.values(parsed).find(v => Array.isArray(v));
+              if (Array.isArray(firstArray)) prompts = firstArray as string[];
+            }
           }
 
-          return Response.json({ prompts: Array.isArray(prompts) ? prompts : [] });
+          // Filter out non-string elements just in case
+          prompts = prompts.filter(p => typeof p === 'string');
+
+          return Response.json({ prompts });
         } catch (e) {
-          // Fallback parsing if JSON is slightly malformed but contains an array
-          const match = content.match(/\[\s*".*?"\s*(?:,\s*".*?"\s*)*\]/s);
-          if (match) {
+          // Fallback: search for JSON array pattern in text
+          const arrayMatch = content.match(/\[\s*".*?"\s*(?:,\s*".*?"\s*)*\]/s);
+          if (arrayMatch) {
             try {
-              const prompts = JSON.parse(match[0]);
-              return Response.json({ prompts });
+              const prompts = JSON.parse(arrayMatch[0]);
+              if (Array.isArray(prompts)) {
+                return Response.json({ prompts: prompts.filter(p => typeof p === 'string') });
+              }
             } catch (e2) {}
           }
+          
           return new Response(`Failed to parse AI response: ${content}`, { status: 500 });
         }
       },
