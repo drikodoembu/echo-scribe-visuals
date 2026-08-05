@@ -10,13 +10,19 @@ type Body = {
 };
 
 function pickImage(json: any): string | null {
-  const d = json?.data?.[0];
-  if (d?.b64_json) return `data:image/png;base64,${d.b64_json}`;
-  if (d?.url) return d.url as string;
-  const msg = json?.choices?.[0]?.message;
-  const img = msg?.images?.[0]?.image_url?.url;
-  if (img) return img as string;
-  return null;
+  // Support standard OpenAI-like format
+  if (json?.data?.[0]?.url) return json.data[0].url;
+  if (json?.data?.[0]?.b64_json) return `data:image/png;base64,${json.data[0].b64_json}`;
+  
+  // Support Gemini-specific format if it differs
+  if (json?.images?.[0]?.url) return json.images[0].url;
+  
+  // Last resort: deep search for anything that looks like a URL or base64
+  const choices = json?.choices?.[0];
+  const msg = choices?.message;
+  const img = msg?.content?.match(/https?:\/\/[^\s"]+/)?.[0] || msg?.images?.[0]?.image_url?.url;
+  
+  return img || null;
 }
 
 export const Route = createFileRoute("/api/images/generate")({
@@ -57,9 +63,10 @@ export const Route = createFileRoute("/api/images/generate")({
           },
           body: JSON.stringify({
             model: "google/gemini-3-pro-image",
-            prompt: fullPrompt, // Correct field for image generation is usually 'prompt'
+            prompt: fullPrompt,
             n: 1,
-            size: aspect === "9:16" ? "1024x1792" : aspect === "16:9" ? "1792x1024" : "1024x1024"
+            size: aspect === "9:16" ? "1024x1792" : aspect === "16:9" ? "1792x1024" : "1024x1024",
+            response_format: "url"
           }),
         });
 
