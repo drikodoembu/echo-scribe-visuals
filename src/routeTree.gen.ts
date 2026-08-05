@@ -19,6 +19,7 @@ import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticat
 import { Route as ApiSeoGenerateRouteImport } from './routes/api/seo.generate'
 import { Route as ApiScriptsStreamRouteImport } from './routes/api/scripts.stream'
 import { Route as ApiImagesGenerateRouteImport } from './routes/api/images.generate'
+import { Route as ApiImagesExtractPromptsRouteImport } from './routes/api/images.extract-prompts'
 import { Route as ApiAudioGenerateRouteImport } from './routes/api/audio.generate'
 import { Route as AuthenticatedAppSeoRouteImport } from './routes/_authenticated/app.seo'
 import { Route as AuthenticatedAppRoteirosRouteImport } from './routes/_authenticated/app.roteiros'
@@ -78,6 +79,11 @@ const ApiScriptsStreamRoute = ApiScriptsStreamRouteImport.update({
 const ApiImagesGenerateRoute = ApiImagesGenerateRouteImport.update({
   id: '/api/images/generate',
   path: '/api/images/generate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiImagesExtractPromptsRoute = ApiImagesExtractPromptsRouteImport.update({
+  id: '/api/images/extract-prompts',
+  path: '/api/images/extract-prompts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAudioGenerateRoute = ApiAudioGenerateRouteImport.update({
@@ -158,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/app/roteiros': typeof AuthenticatedAppRoteirosRoute
   '/app/seo': typeof AuthenticatedAppSeoRoute
   '/api/audio/generate': typeof ApiAudioGenerateRoute
+  '/api/images/extract-prompts': typeof ApiImagesExtractPromptsRoute
   '/api/images/generate': typeof ApiImagesGenerateRoute
   '/api/scripts/stream': typeof ApiScriptsStreamRoute
   '/api/seo/generate': typeof ApiSeoGenerateRoute
@@ -179,6 +186,7 @@ export interface FileRoutesByTo {
   '/app/roteiros': typeof AuthenticatedAppRoteirosRoute
   '/app/seo': typeof AuthenticatedAppSeoRoute
   '/api/audio/generate': typeof ApiAudioGenerateRoute
+  '/api/images/extract-prompts': typeof ApiImagesExtractPromptsRoute
   '/api/images/generate': typeof ApiImagesGenerateRoute
   '/api/scripts/stream': typeof ApiScriptsStreamRoute
   '/api/seo/generate': typeof ApiSeoGenerateRoute
@@ -203,6 +211,7 @@ export interface FileRoutesById {
   '/_authenticated/app/roteiros': typeof AuthenticatedAppRoteirosRoute
   '/_authenticated/app/seo': typeof AuthenticatedAppSeoRoute
   '/api/audio/generate': typeof ApiAudioGenerateRoute
+  '/api/images/extract-prompts': typeof ApiImagesExtractPromptsRoute
   '/api/images/generate': typeof ApiImagesGenerateRoute
   '/api/scripts/stream': typeof ApiScriptsStreamRoute
   '/api/seo/generate': typeof ApiSeoGenerateRoute
@@ -227,6 +236,7 @@ export interface FileRouteTypes {
     | '/app/roteiros'
     | '/app/seo'
     | '/api/audio/generate'
+    | '/api/images/extract-prompts'
     | '/api/images/generate'
     | '/api/scripts/stream'
     | '/api/seo/generate'
@@ -248,6 +258,7 @@ export interface FileRouteTypes {
     | '/app/roteiros'
     | '/app/seo'
     | '/api/audio/generate'
+    | '/api/images/extract-prompts'
     | '/api/images/generate'
     | '/api/scripts/stream'
     | '/api/seo/generate'
@@ -271,6 +282,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/roteiros'
     | '/_authenticated/app/seo'
     | '/api/audio/generate'
+    | '/api/images/extract-prompts'
     | '/api/images/generate'
     | '/api/scripts/stream'
     | '/api/seo/generate'
@@ -283,6 +295,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiAudioGenerateRoute: typeof ApiAudioGenerateRoute
+  ApiImagesExtractPromptsRoute: typeof ApiImagesExtractPromptsRoute
   ApiImagesGenerateRoute: typeof ApiImagesGenerateRoute
   ApiScriptsStreamRoute: typeof ApiScriptsStreamRoute
   ApiSeoGenerateRoute: typeof ApiSeoGenerateRoute
@@ -358,6 +371,13 @@ declare module '@tanstack/react-router' {
       path: '/api/images/generate'
       fullPath: '/api/images/generate'
       preLoaderRoute: typeof ApiImagesGenerateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/images/extract-prompts': {
+      id: '/api/images/extract-prompts'
+      path: '/api/images/extract-prompts'
+      fullPath: '/api/images/extract-prompts'
+      preLoaderRoute: typeof ApiImagesExtractPromptsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/audio/generate': {
@@ -498,6 +518,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiAudioGenerateRoute: ApiAudioGenerateRoute,
+  ApiImagesExtractPromptsRoute: ApiImagesExtractPromptsRoute,
   ApiImagesGenerateRoute: ApiImagesGenerateRoute,
   ApiScriptsStreamRoute: ApiScriptsStreamRoute,
   ApiSeoGenerateRoute: ApiSeoGenerateRoute,

@@ -129,21 +129,39 @@ function ImagesPage() {
   async function generatePromptsFromScript() {
     if (!genScriptId) return;
     setIsPromptGenerating(true);
+    setScenePrompts([]); // Clear old ones immediately
+    toast.info("Iniciando análise do roteiro para sugestão de imagens...");
     try {
       const s = scripts.find((x) => x.id === genScriptId);
       if (s) {
-        // Here we can either just parse the existing ones or use an AI to refine them
-        // For now, let's parse from the script content as Brother Gabriel already includes them
-        const parsed = parseScript(s.content ?? "");
-        setScenePrompts(parsed.imagePrompts);
-        if (parsed.imagePrompts.length === 0) {
-          toast.error("Nenhum prompt de imagem encontrado no roteiro.");
+        const { data: sess } = await supabase.auth.getSession();
+        const token = sess.session?.access_token;
+        if (!token) throw new Error("Sessão expirada.");
+
+        // We call a new endpoint to extract/generate prompts from the clean script
+        const res = await fetch("/api/images/extract-prompts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ scriptContent: s.content }),
+        });
+
+        if (!res.ok) {
+          const errText = await res.text().catch(() => "Erro desconhecido");
+          throw new Error(`Falha ao gerar prompts via IA: ${errText}`);
+        }
+        
+        const data = await res.json();
+        const prompts = data.prompts || [];
+
+        setScenePrompts(prompts);
+        if (prompts.length === 0) {
+          toast.error("A IA não conseguiu extrair prompts deste roteiro.");
         } else {
-          toast.success(`${parsed.imagePrompts.length} prompts de cena gerados!`);
+          toast.success(`${prompts.length} prompts de cena sugeridos pela IA!`);
         }
       }
     } catch (err) {
-      toast.error("Erro ao gerar prompts.");
+      toast.error("Erro ao gerar prompts: " + (err as Error).message);
     } finally {
       setIsPromptGenerating(false);
     }
@@ -282,21 +300,6 @@ function ImagesPage() {
           </p>
         </div>
 
-        <div className="flex items-end md:col-span-2">
-          <Button
-            variant="outline"
-            className="w-full border-gold/30 text-gold hover:bg-gold/10"
-            onClick={generatePromptsFromScript}
-            disabled={!genScriptId || isPromptGenerating}
-          >
-            {isPromptGenerating ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Sparkles className="mr-2 h-4 w-4" />
-            )}
-            Gerar prompts das cenas do roteiro
-          </Button>
-        </div>
         <div className="space-y-2">
           <Label>Roteiro</Label>
           <Select value={genScriptId} onValueChange={pickGenScript}>
@@ -369,6 +372,28 @@ function ImagesPage() {
             )}
           </div>
         </div>
+
+        <div className="flex items-end md:col-span-2">
+          <Button
+            variant="outline"
+            className="w-full border-gold/30 text-gold hover:bg-gold/10"
+            onClick={generatePromptsFromScript}
+            disabled={!genScriptId || isPromptGenerating}
+          >
+            {isPromptGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Gerando prompts...
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Gerar prompts das cenas do roteiro
+              </>
+            )}
+          </Button>
+        </div>
+
 
         {plannedPrompts.length > 0 && (
           <div className="mt-4 space-y-4 md:col-span-2">
