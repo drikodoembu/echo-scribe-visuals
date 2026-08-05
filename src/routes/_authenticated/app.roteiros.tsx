@@ -63,10 +63,11 @@ function RoteirosPage() {
     format: Format;
     duration: number;
     content: string;
+    customPrompt: string;
   };
   const initial: Draft = (() => {
     if (typeof window === "undefined") {
-      return { selectedId: null, title: "", topic: "", saint: "", format: "short", duration: 55, content: "" };
+      return { selectedId: null, title: "", topic: "", saint: "", format: "short", duration: 55, content: "", customPrompt: "" };
     }
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -74,7 +75,7 @@ function RoteirosPage() {
     } catch {
       // ignore
     }
-    return { selectedId: null, title: "", topic: "", saint: "", format: "short", duration: 55, content: "" };
+    return { selectedId: null, title: "", topic: "", saint: "", format: "short", duration: 55, content: "", customPrompt: "" };
   })();
 
   const [selectedId, setSelectedId] = useState<string | null>(initial.selectedId);
@@ -84,6 +85,7 @@ function RoteirosPage() {
   const [format, setFormat] = useState<Format>(initial.format);
   const [duration, setDuration] = useState(initial.duration);
   const [content, setContent] = useState(initial.content);
+  const [customPrompt, setCustomPrompt] = useState(initial.customPrompt);
   const [streaming, setStreaming] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -94,12 +96,12 @@ function RoteirosPage() {
     try {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ selectedId, title, topic, saint, format, duration, content }),
+        JSON.stringify({ selectedId, title, topic, saint, format, duration, content, customPrompt }),
       );
     } catch {
       // ignore quota
     }
-  }, [selectedId, title, topic, saint, format, duration, content]);
+  }, [selectedId, title, topic, saint, format, duration, content, customPrompt]);
 
   function loadScript(s: ScriptRow) {
     setSelectedId(s.id);
@@ -109,6 +111,8 @@ function RoteirosPage() {
     setFormat((s.format as Format) ?? "short");
     setDuration(s.duration_seconds);
     setContent(s.content);
+    // Note: If you want to persist customPrompt in DB, you'd need to add it to the schema.
+    // For now, it stays in localStorage.
   }
 
   function newScript() {
@@ -119,6 +123,7 @@ function RoteirosPage() {
     setFormat("short");
     setDuration(55);
     setContent("");
+    // We keep the custom prompt even for new scripts unless the user clears it
   }
 
   const previewUserPrompt = buildScriptPrompt({
@@ -174,7 +179,7 @@ function RoteirosPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ topic, saint: saint || undefined, format, duration }),
+        body: JSON.stringify({ topic, saint: saint || undefined, format, duration, customPrompt: customPrompt.trim() || undefined }),
         signal: controller.signal,
       });
       if (!res.ok || !res.body) {
@@ -403,7 +408,7 @@ function RoteirosPage() {
             </div>
           </div>
 
-          {/* Prompt Accordion */}
+          {/* Prompt Config */}
           <div className="overflow-hidden rounded-xl border border-border">
             <button
               type="button"
@@ -421,24 +426,39 @@ function RoteirosPage() {
             </button>
             {showPreview && (
               <div className="space-y-4 border-t border-border bg-card/30 p-4">
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  Conteúdo enviado ao modelo <code className="text-gold">gemini-2.5-flash</code>.
-                </p>
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">
+                    Instruções Personalizadas (Opcional)
+                  </Label>
+                  <Textarea
+                    placeholder="Quero poder alterar as instrçoes do prompt deixe essa atual como opçao mas quero inserir outra conf de prompt IA"
+                    value={customPrompt}
+                    onChange={(e) => setCustomPrompt(e.target.value)}
+                    rows={4}
+                    className="resize-none rounded-lg bg-background/60 text-xs font-mono leading-relaxed"
+                  />
+                  <p className="text-[9px] leading-tight text-muted-foreground">
+                    Se preenchido, o Irmão Gabriel seguirá estas orientações adicionais. Deixe em branco para usar o padrão teológico tradicional.
+                  </p>
+                </div>
+
+                <div className="h-px bg-border/50" />
+
                 <div className="space-y-1">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">System</p>
-                  <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-md bg-background/60 p-3 font-mono text-xs leading-relaxed text-foreground">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">System (Padrão)</p>
+                  <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-md bg-background/60 p-3 font-mono text-[10px] leading-relaxed text-foreground/70">
                     {SCRIPT_SYSTEM_PROMPT}
                   </pre>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">User</p>
-                  <pre className="max-h-56 overflow-auto whitespace-pre-wrap rounded-md bg-background/60 p-3 font-mono text-xs leading-relaxed text-foreground">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">User (Gerado)</p>
+                  <pre className="max-h-56 overflow-auto whitespace-pre-wrap rounded-md bg-background/60 p-3 font-mono text-[10px] leading-relaxed text-foreground/70">
                     {previewUserPrompt}
                   </pre>
                 </div>
                 <div className="flex justify-end">
-                  <Button size="sm" variant="secondary" onClick={copyPreview}>
-                    <Copy className="mr-2 h-3.5 w-3.5" /> Copiar prompt completo
+                  <Button size="sm" variant="secondary" onClick={copyPreview} className="h-8 text-[10px]">
+                    <Copy className="mr-2 h-3 w-3" /> Copiar prompt completo
                   </Button>
                 </div>
               </div>
