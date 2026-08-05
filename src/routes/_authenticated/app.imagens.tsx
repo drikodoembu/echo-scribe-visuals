@@ -302,11 +302,16 @@ function ImagesPage() {
             disabled={!genScriptId || isPromptGenerating}
           >
             {isPromptGenerating ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Gerando prompts...
+              </>
             ) : (
-              <Sparkles className="mr-2 h-4 w-4" />
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Gerar prompts das cenas do roteiro
+              </>
             )}
-            Gerar prompts das cenas do roteiro
           </Button>
         </div>
         <div className="space-y-2">
