@@ -166,12 +166,6 @@ function ImagesPage() {
       setIsPromptGenerating(false);
     }
   }
-    } catch (err) {
-      toast.error("Erro ao gerar prompts: " + (err as Error).message);
-    } finally {
-      setIsPromptGenerating(false);
-    }
-  }
 
   async function generateOne(prompt: string, title: string) {
     const { data: sess } = await supabase.auth.getSession();
