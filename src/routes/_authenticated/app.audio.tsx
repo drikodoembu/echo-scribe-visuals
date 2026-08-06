@@ -84,7 +84,31 @@ function AudioPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ genScriptId, genTitle, genText, voice, scriptId }));
+    // Also update global active script if it's set here
+    if (genScriptId) {
+      localStorage.setItem("catolicoteca:active_script_id", genScriptId);
+    }
   }, [genScriptId, genTitle, genText, voice, scriptId]);
+
+  // Sincroniza com o roteiro ativo global
+  useEffect(() => {
+    if (!scripts.length) return;
+    const activeId = localStorage.getItem("catolicoteca:active_script_id");
+    
+    // Se temos um ID global diferente do local, e o local está "limpo" ou acabamos de entrar
+    if (activeId && activeId !== genScriptId) {
+      const s = scripts.find(x => x.id === activeId);
+      if (s) {
+        // Se o texto está vazio ou o script ID é novo, carrega
+        if (!genText.trim() || !genScriptId) {
+          pickGenScript(activeId);
+        }
+      }
+    } else if (!genScriptId && scripts.length > 0) {
+      // Se não tem nada e tem scripts, carrega o mais recente
+      pickGenScript(scripts[0].id);
+    }
+  }, [scripts, genScriptId]);
 
   function pickGenScript(id: string) {
     setGenScriptId(id);

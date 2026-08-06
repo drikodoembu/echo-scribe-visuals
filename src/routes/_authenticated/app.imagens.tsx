@@ -103,7 +103,20 @@ function ImagesPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ genScriptId, audioId, aspect, secondsPerImage, scriptId }));
+    if (genScriptId) localStorage.setItem("catolicoteca:active_script_id", genScriptId);
   }, [genScriptId, audioId, aspect, secondsPerImage, scriptId]);
+
+  // Sync with global active script
+  useEffect(() => {
+    if (!scripts.length) return;
+    const activeId = localStorage.getItem("catolicoteca:active_script_id");
+    if (activeId && activeId !== genScriptId) {
+      const exists = scripts.find(s => s.id === activeId);
+      if (exists) {
+        pickGenScript(activeId);
+      }
+    }
+  }, [scripts]);
 
   const selectedAudio = audios.find((a) => a.id === audioId);
 

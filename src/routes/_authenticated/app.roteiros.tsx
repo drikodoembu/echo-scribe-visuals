@@ -105,14 +105,13 @@ function RoteirosPage() {
 
   function loadScript(s: ScriptRow) {
     setSelectedId(s.id);
+    localStorage.setItem("catolicoteca:active_script_id", s.id);
     setTitle(s.title);
     setTopic(s.topic);
     setSaint(s.saint ?? "");
     setFormat((s.format as Format) ?? "short");
     setDuration(s.duration_seconds);
     setContent(s.content);
-    // Note: If you want to persist customPrompt in DB, you'd need to add it to the schema.
-    // For now, it stays in localStorage.
   }
 
   function newScript() {
@@ -236,7 +235,9 @@ function RoteirosPage() {
     onSuccess: (saved) => {
       toast.success("Roteiro salvo.");
       if (saved && typeof saved === "object" && "id" in saved) {
-        setSelectedId((saved as { id: string }).id);
+        const sid = (saved as { id: string }).id;
+        setSelectedId(sid);
+        localStorage.setItem("catolicoteca:active_script_id", sid);
       }
       qc.invalidateQueries({ queryKey: ["scripts"] });
     },
