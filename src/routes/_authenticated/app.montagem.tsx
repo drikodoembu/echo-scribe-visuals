@@ -69,7 +69,23 @@ function MontagemPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ scriptId, audioId, musicId, format, sceneDuration, useNarrationLen }));
+    if (scriptId) localStorage.setItem("catolicoteca:active_script_id", scriptId);
   }, [scriptId, audioId, musicId, format, sceneDuration, useNarrationLen]);
+
+  // Sync with global active script
+  useEffect(() => {
+    if (!scripts.length) return;
+    const activeId = localStorage.getItem("catolicoteca:active_script_id");
+    if (activeId && activeId !== scriptId) {
+      const exists = scripts.find(s => s.id === activeId);
+      if (exists) {
+        setScriptId(activeId);
+        // Also try to find matching audio/music for this script
+        const a = audios.find(x => x.script_id === activeId);
+        if (a) setAudioId(a.id);
+      }
+    }
+  }, [scripts]);
 
   const selectedAudio = audios.find((a) => a.id === audioId);
   const selectedMusic = musics.find((m) => m.id === musicId);
