@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import {
   BookOpen,
   Calendar,
-  BookOpen,
   Image as ImageIcon,
   LayoutDashboard,
   LogOut,
