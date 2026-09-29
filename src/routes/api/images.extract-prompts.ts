@@ -26,8 +26,8 @@ export const Route = createFileRoute("/api/images/extract-prompts")({
         const lovableKey = process.env.LOVABLE_API_KEY;
         if (!lovableKey) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
 
-        const prompt = `Analise o roteiro católico abaixo e sugira de 4 a 8 descrições de imagens cinematográficas (prompts) que ilustrem o conteúdo de forma profunda e reverente.
-        As descrições devem ser em INGLÊS, focadas em iluminação dramática, estética sacra e alta qualidade, sem textos ou marcas d'água.
+        const prompt = `Analise o roteiro de história do cotidiano abaixo e sugira de 4 a 8 descrições de imagens cinematográficas (prompts) que ilustrem as cenas da narrativa.
+        As descrições devem ser em INGLÊS, focadas em iluminação cinematográfica, cenas realistas do dia a dia e alta qualidade, sem textos ou marcas d'água.
         
         IMPORTANTE: Responda APENAS um objeto JSON no formato: {"prompts": ["prompt 1", "prompt 2", ...]}
         Não inclua explicações, comentários, blocos de código Markdown (\`\`\`json) ou outros campos.

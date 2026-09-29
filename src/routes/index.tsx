@@ -1,22 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Cross, Sparkles, Youtube, Wand2 } from "lucide-react";
+import { BookOpen, Sparkles, Youtube, Wand2 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Catolicoteca Auto Creator · Estúdio católico de conteúdo com IA" },
+      { title: "Auto Creator · Estúdio de histórias do cotidiano com IA" },
       {
         name: "description",
         content:
-          "Crie roteiros com citações de santos, narração, imagens sacras, trilha e monte vídeos Shorts e longos direto no navegador. Publique no YouTube em um só fluxo.",
+          "Crie roteiros de histórias do cotidiano, narração, imagens, trilha e monte vídeos Shorts e longos direto no navegador. Publique no YouTube em um só fluxo.",
       },
-      { name: "keywords", content: "conteúdo católico, YouTube católico, roteiro católico, Shorts católicos, IA católica, Catolicoteca, canal católico" },
-      { property: "og:title", content: "Catolicoteca Auto Creator · Estúdio católico com IA" },
-      { property: "og:description", content: "Do sopro do Espírito ao Shorts publicado — roteiro, áudio, imagem, montagem e publicação no YouTube." },
+      { name: "keywords", content: "histórias do cotidiano, roteiros com IA, YouTube Shorts, narração automática, criação de vídeos, Auto Creator" },
+      { property: "og:title", content: "Auto Creator · Estúdio de histórias com IA" },
+      { property: "og:description", content: "Da ideia ao Shorts publicado — roteiro, áudio, imagem, montagem e publicação no YouTube." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "/" },
-      { name: "twitter:title", content: "Catolicoteca Auto Creator" },
-      { name: "twitter:description", content: "Estúdio católico completo: roteiro, mídia e publicação no YouTube com IA." },
+      { name: "twitter:title", content: "Auto Creator" },
+      { name: "twitter:description", content: "Estúdio completo de histórias do cotidiano: roteiro, mídia e publicação no YouTube com IA." },
     ],
     links: [{ rel: "canonical", href: "/" }],
     scripts: [
@@ -25,12 +25,12 @@ export const Route = createFileRoute("/")({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",
-          name: "Catolicoteca Auto Creator",
+          name: "Auto Creator",
           applicationCategory: "MultimediaApplication",
           operatingSystem: "Web",
           inLanguage: "pt-BR",
           description:
-            "Estúdio católico de conteúdo com IA para criar roteiros, áudio, imagens, montagem e publicação no YouTube.",
+            "Estúdio de histórias do cotidiano com IA para criar roteiros, áudio, imagens, montagem e publicação no YouTube.",
           offers: { "@type": "Offer", price: "0", priceCurrency: "BRL" },
         }),
       },
@@ -44,9 +44,9 @@ function Landing() {
     <div className="bg-sacred-gradient min-h-screen">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <div className="flex items-center gap-2">
-          <Cross className="h-6 w-6 text-primary" />
+          <BookOpen className="h-6 w-6 text-primary" />
           <span className="font-display text-lg font-semibold tracking-wide">
-            Catolicoteca <span className="text-gold">Auto Creator</span>
+            Auto <span className="text-gold">Creator</span>
           </span>
         </div>
         <Link
@@ -59,14 +59,14 @@ function Landing() {
 
       <main className="mx-auto flex max-w-4xl flex-col items-center gap-8 px-6 pb-24 pt-16 text-center">
         <span className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-primary">
-          <Sparkles className="h-3.5 w-3.5" /> Ora et labora, com IA
+          <Sparkles className="h-3.5 w-3.5" /> Histórias que prendem, com IA
         </span>
         <h1 className="font-display text-5xl leading-tight text-primary md:text-6xl">
-          Do sopro do Espírito ao Shorts publicado.
+          Da ideia ao Shorts publicado.
         </h1>
         <p className="max-w-2xl text-lg text-muted-foreground md:text-xl">
-          Um estúdio completo para o seu canal católico: roteiro com citação de santos,
-          áudio, imagem, música, montagem no navegador e publicação direta no YouTube.
+          Um estúdio completo para o seu canal de histórias do cotidiano: roteiro,
+          narração, imagem, música, montagem no navegador e publicação direta no YouTube.
         </p>
         <div className="flex flex-wrap justify-center gap-3">
           <Link
@@ -98,14 +98,14 @@ function Landing() {
       </main>
 
       <footer className="border-t border-border/50 py-6 text-center text-xs text-muted-foreground">
-        Ad maiorem Dei gloriam · Catolicoteca © {new Date().getFullYear()}
+        Auto Creator © {new Date().getFullYear()}
       </footer>
     </div>
   );
 }
 
 const FEATURES = [
-  { icon: Wand2, title: "Roteiros com IA", desc: "Gancho, citação de santo, explicação e chamada — em 50 a 60 segundos." },
-  { icon: Sparkles, title: "Áudio, imagem e música", desc: "Vozes em pt-BR, imagens sacras e trilhas por estilo litúrgico." },
+  { icon: Wand2, title: "Roteiros com IA", desc: "Gancho, história do cotidiano, reflexão e chamada — em 50 a 60 segundos." },
+  { icon: Sparkles, title: "Áudio, imagem e música", desc: "Vozes em pt-BR, imagens geradas por IA e trilhas por estilo." },
   { icon: Youtube, title: "Montagem + publicação", desc: "Monta no navegador (FFmpeg.wasm) e publica direto no YouTube com agendamento." },
 ];
