@@ -39,9 +39,9 @@ export function buildScriptPrompt(b: BuildPromptInput): string {
     : `Roteiro para vídeo longo (~${b.duration}s)`;
 
   return `Escreva um ${shape} em português do Brasil sobre: "${b.topic || "<tema>"}".
-${b.saint ? `Inclua uma citação profunda de ${b.saint}, provocando uma mudança de vida.` : "Inclua uma citação de um santo ou versículo bíblico que confronte a mediocridade espiritual."}
+${b.saint ? `Contexto/personagem ou elemento central da história: ${b.saint}.` : "Conte uma história do cotidiano que gere identificação imediata e termine com uma reflexão marcante."}
 
-Regra de Ouro: Entregue APENAS o texto da narração. Remova qualquer instrução de "FRASE NA TELA", "IMAGEM DE FUNDO", "MÚSICA" ou lista de "IMAGENS". Eu quero apenas o texto puro para ser lido, focado na provocação e profundidade que o Irmão Gabriel exige.`;
+Regra de Ouro: Entregue APENAS o texto da narração. Remova qualquer instrução de "FRASE NA TELA", "IMAGEM DE FUNDO", "MÚSICA" ou lista de "IMAGENS". Eu quero apenas o texto puro para ser lido, com a provocação e profundidade de uma boa história do cotidiano.`;
 }
 
 export interface ParsedScript {
