@@ -6,7 +6,7 @@ export interface SeoPromptInput {
   narration: string;
 }
 
-export const SEO_SYSTEM_PROMPT = `Você é um especialista em SEO para YouTube em português do Brasil, focado no nicho católico (espiritualidade, santos, oração, Bíblia).
+export const SEO_SYSTEM_PROMPT = `Você é um especialista em SEO para YouTube em português do Brasil, focado no nicho de histórias do cotidiano, crônicas e reflexões sobre a vida.
 Seu trabalho é transformar um roteiro em metadados otimizados para descoberta no YouTube e na busca do Google.
 Regras:
 1. Títulos com até 70 caracteres, com a palavra-chave principal no início, curiosidade real e zero clickbait enganoso.
@@ -19,7 +19,7 @@ Responda SEMPRE em JSON válido, sem markdown e sem comentários.`;
 
 export function buildSeoPrompt(b: SeoPromptInput): string {
   const isShort = b.format === "short";
-  return `Gere os metadados de SEO para um ${isShort ? "YouTube Short" : "vídeo longo do YouTube"} do canal católico "Catolicoteca".
+  return `Gere os metadados de SEO para um ${isShort ? "YouTube Short" : "vídeo longo do YouTube"} de um canal de histórias do cotidiano.
 
 Tema: ${b.topic || b.title}
 Título de trabalho: ${b.title}
