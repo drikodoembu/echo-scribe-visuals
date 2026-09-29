@@ -261,14 +261,14 @@ function RoteirosPage() {
         <div className="space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-gold">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-gold" />
-            Irmão Gabriel · Direção espiritual
+            Histórias do Cotidiano · Narrativa real
           </div>
           <h1 className="font-display text-4xl font-bold leading-[1.05] tracking-tight text-gold md:text-6xl">
             Roteiro de<br />Produção
           </h1>
           <p className="max-w-xl text-base font-light leading-relaxed text-muted-foreground">
-            Gancho, citação, aplicação e chamada final — refinados no tom sereno do
-            Irmão Gabriel para o canal Catolicoteca.
+            Gancho, história, reflexão e chamada final — roteiros de histórias do
+            cotidiano que prendem o público do início ao fim.
           </p>
         </div>
 
@@ -360,11 +360,11 @@ function RoteirosPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="saint" className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">
-                  Santo
+                  Personagem / Contexto
                 </Label>
                 <Input
                   id="saint"
-                  placeholder="Ex.: Agostinho"
+                  placeholder="Ex.: um pai de família"
                   value={saint}
                   onChange={(e) => setSaint(e.target.value)}
                   className="h-11 rounded-lg bg-background/60 text-base"
@@ -432,14 +432,14 @@ function RoteirosPage() {
                     Instruções Personalizadas (Opcional)
                   </Label>
                   <Textarea
-                    placeholder="Quero poder alterar as instrçoes do prompt deixe essa atual como opçao mas quero inserir outra conf de prompt IA"
+                    placeholder="Ex.: escreva em tom de suspense, em primeira pessoa, com final surpreendente..."
                     value={customPrompt}
                     onChange={(e) => setCustomPrompt(e.target.value)}
                     rows={4}
                     className="resize-none rounded-lg bg-background/60 text-xs font-mono leading-relaxed"
                   />
                   <p className="text-[9px] leading-tight text-muted-foreground">
-                    Se preenchido, o Irmão Gabriel seguirá estas orientações adicionais. Deixe em branco para usar o padrão teológico tradicional.
+                    Se preenchido, a IA seguirá estas orientações adicionais. Deixe em branco para usar o estilo padrão de histórias do cotidiano.
                   </p>
                 </div>
 
@@ -549,7 +549,7 @@ function RoteirosPage() {
                 {streaming && (
                   <div className="absolute bottom-12 right-12 flex items-center gap-3 rounded-full bg-gold/10 px-4 py-2 text-xs font-medium text-gold backdrop-blur-sm">
                     <Loader2 className="h-3 w-3 animate-spin" />
-                    Irmão Gabriel está escrevendo...
+                    A IA está escrevendo sua história...
                   </div>
                 )}
               </div>
