@@ -83,9 +83,9 @@ function AppShell() {
     <div className="flex min-h-screen bg-background">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
         <div className="flex items-center gap-2 px-6 py-6">
-          <Cross className="h-5 w-5 text-sidebar-primary" />
+          <BookOpen className="h-5 w-5 text-sidebar-primary" />
           <span className="font-display text-base font-semibold tracking-wide">
-            Catolicoteca
+            Auto Creator
           </span>
         </div>
         <nav className="flex-1 space-y-1 px-3">
