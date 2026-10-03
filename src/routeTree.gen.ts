@@ -9,32 +9,36 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
-import { Route as ApiSeoGenerateRouteImport } from './routes/api/seo.generate'
-import { Route as ApiScriptsStreamRouteImport } from './routes/api/scripts.stream'
-import { Route as ApiImagesGenerateRouteImport } from './routes/api/images.generate'
-import { Route as ApiImagesExtractPromptsRouteImport } from './routes/api/images.extract-prompts'
-import { Route as ApiAudioGenerateRouteImport } from './routes/api/audio.generate'
-import { Route as AuthenticatedAppSeoRouteImport } from './routes/_authenticated/app.seo'
-import { Route as AuthenticatedAppRoteirosRouteImport } from './routes/_authenticated/app.roteiros'
-import { Route as AuthenticatedAppPublicacaoRouteImport } from './routes/_authenticated/app.publicacao'
-import { Route as AuthenticatedAppMusicasRouteImport } from './routes/_authenticated/app.musicas'
-import { Route as AuthenticatedAppMontagemRouteImport } from './routes/_authenticated/app.montagem'
-import { Route as AuthenticatedAppImagensRouteImport } from './routes/_authenticated/app.imagens'
-import { Route as AuthenticatedAppConfiguracoesRouteImport } from './routes/_authenticated/app.configuracoes'
-import { Route as AuthenticatedAppAudioRouteImport } from './routes/_authenticated/app.audio'
-import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
 import { Route as AuthenticatedAppAgendaRouteImport } from './routes/_authenticated/app.agenda'
+import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
+import { Route as AuthenticatedAppAudioRouteImport } from './routes/_authenticated/app.audio'
+import { Route as AuthenticatedAppConfiguracoesRouteImport } from './routes/_authenticated/app.configuracoes'
+import { Route as AuthenticatedAppImagensRouteImport } from './routes/_authenticated/app.imagens'
+import { Route as AuthenticatedAppMontagemRouteImport } from './routes/_authenticated/app.montagem'
+import { Route as AuthenticatedAppMusicasRouteImport } from './routes/_authenticated/app.musicas'
+import { Route as AuthenticatedAppPublicacaoRouteImport } from './routes/_authenticated/app.publicacao'
+import { Route as AuthenticatedAppRoteirosRouteImport } from './routes/_authenticated/app.roteiros'
+import { Route as AuthenticatedAppSeoRouteImport } from './routes/_authenticated/app.seo'
+import { Route as ApiAudioGenerateRouteImport } from './routes/api/audio.generate'
+import { Route as ApiImagesExtractPromptsRouteImport } from './routes/api/images.extract-prompts'
+import { Route as ApiImagesGenerateRouteImport } from './routes/api/images.generate'
+import { Route as ApiScriptsStreamRouteImport } from './routes/api/scripts.stream'
+import { Route as ApiSeoGenerateRouteImport } from './routes/api/seo.generate'
 
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -42,97 +46,29 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthCallbackRoute = AuthCallbackRouteImport.update({
-  id: '/callback',
-  path: '/callback',
-  getParentRoute: () => AuthRoute,
 } as any)
 const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   id: '/app',
   path: '/app',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const ApiSeoGenerateRoute = ApiSeoGenerateRouteImport.update({
-  id: '/api/seo/generate',
-  path: '/api/seo/generate',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiScriptsStreamRoute = ApiScriptsStreamRouteImport.update({
-  id: '/api/scripts/stream',
-  path: '/api/scripts/stream',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiImagesGenerateRoute = ApiImagesGenerateRouteImport.update({
-  id: '/api/images/generate',
-  path: '/api/images/generate',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiImagesExtractPromptsRoute = ApiImagesExtractPromptsRouteImport.update({
-  id: '/api/images/extract-prompts',
-  path: '/api/images/extract-prompts',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAudioGenerateRoute = ApiAudioGenerateRouteImport.update({
-  id: '/api/audio/generate',
-  path: '/api/audio/generate',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedAppSeoRoute = AuthenticatedAppSeoRouteImport.update({
-  id: '/seo',
-  path: '/seo',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
-const AuthenticatedAppRoteirosRoute =
-  AuthenticatedAppRoteirosRouteImport.update({
-    id: '/roteiros',
-    path: '/roteiros',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppPublicacaoRoute =
-  AuthenticatedAppPublicacaoRouteImport.update({
-    id: '/publicacao',
-    path: '/publicacao',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppMusicasRoute = AuthenticatedAppMusicasRouteImport.update({
-  id: '/musicas',
-  path: '/musicas',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
-const AuthenticatedAppMontagemRoute =
-  AuthenticatedAppMontagemRouteImport.update({
-    id: '/montagem',
-    path: '/montagem',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppImagensRoute = AuthenticatedAppImagensRouteImport.update({
-  id: '/imagens',
-  path: '/imagens',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
-const AuthenticatedAppConfiguracoesRoute =
-  AuthenticatedAppConfiguracoesRouteImport.update({
-    id: '/configuracoes',
-    path: '/configuracoes',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppAudioRoute = AuthenticatedAppAudioRouteImport.update({
-  id: '/audio',
-  path: '/audio',
+const AuthenticatedAppAgendaRoute = AuthenticatedAppAgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppAnalyticsRoute =
@@ -141,10 +77,74 @@ const AuthenticatedAppAnalyticsRoute =
     path: '/analytics',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
-const AuthenticatedAppAgendaRoute = AuthenticatedAppAgendaRouteImport.update({
-  id: '/agenda',
-  path: '/agenda',
+const AuthenticatedAppAudioRoute = AuthenticatedAppAudioRouteImport.update({
+  id: '/audio',
+  path: '/audio',
   getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppConfiguracoesRoute =
+  AuthenticatedAppConfiguracoesRouteImport.update({
+    id: '/configuracoes',
+    path: '/configuracoes',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppImagensRoute = AuthenticatedAppImagensRouteImport.update({
+  id: '/imagens',
+  path: '/imagens',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppMontagemRoute =
+  AuthenticatedAppMontagemRouteImport.update({
+    id: '/montagem',
+    path: '/montagem',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppMusicasRoute = AuthenticatedAppMusicasRouteImport.update({
+  id: '/musicas',
+  path: '/musicas',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppPublicacaoRoute =
+  AuthenticatedAppPublicacaoRouteImport.update({
+    id: '/publicacao',
+    path: '/publicacao',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppRoteirosRoute =
+  AuthenticatedAppRoteirosRouteImport.update({
+    id: '/roteiros',
+    path: '/roteiros',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppSeoRoute = AuthenticatedAppSeoRouteImport.update({
+  id: '/seo',
+  path: '/seo',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const ApiAudioGenerateRoute = ApiAudioGenerateRouteImport.update({
+  id: '/api/audio/generate',
+  path: '/api/audio/generate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiImagesExtractPromptsRoute = ApiImagesExtractPromptsRouteImport.update({
+  id: '/api/images/extract-prompts',
+  path: '/api/images/extract-prompts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiImagesGenerateRoute = ApiImagesGenerateRouteImport.update({
+  id: '/api/images/generate',
+  path: '/api/images/generate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiScriptsStreamRoute = ApiScriptsStreamRouteImport.update({
+  id: '/api/scripts/stream',
+  path: '/api/scripts/stream',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSeoGenerateRoute = ApiSeoGenerateRouteImport.update({
+  id: '/api/seo/generate',
+  path: '/api/seo/generate',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -303,18 +303,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -324,19 +317,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/callback': {
-      id: '/auth/callback'
-      path: '/callback'
-      fullPath: '/auth/callback'
-      preLoaderRoute: typeof AuthCallbackRouteImport
-      parentRoute: typeof AuthRoute
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/app': {
       id: '/_authenticated/app'
@@ -345,6 +338,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_authenticated/app/': {
       id: '/_authenticated/app/'
       path: '/'
@@ -352,95 +352,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/api/seo/generate': {
-      id: '/api/seo/generate'
-      path: '/api/seo/generate'
-      fullPath: '/api/seo/generate'
-      preLoaderRoute: typeof ApiSeoGenerateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/scripts/stream': {
-      id: '/api/scripts/stream'
-      path: '/api/scripts/stream'
-      fullPath: '/api/scripts/stream'
-      preLoaderRoute: typeof ApiScriptsStreamRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/images/generate': {
-      id: '/api/images/generate'
-      path: '/api/images/generate'
-      fullPath: '/api/images/generate'
-      preLoaderRoute: typeof ApiImagesGenerateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/images/extract-prompts': {
-      id: '/api/images/extract-prompts'
-      path: '/api/images/extract-prompts'
-      fullPath: '/api/images/extract-prompts'
-      preLoaderRoute: typeof ApiImagesExtractPromptsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/audio/generate': {
-      id: '/api/audio/generate'
-      path: '/api/audio/generate'
-      fullPath: '/api/audio/generate'
-      preLoaderRoute: typeof ApiAudioGenerateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/app/seo': {
-      id: '/_authenticated/app/seo'
-      path: '/seo'
-      fullPath: '/app/seo'
-      preLoaderRoute: typeof AuthenticatedAppSeoRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/roteiros': {
-      id: '/_authenticated/app/roteiros'
-      path: '/roteiros'
-      fullPath: '/app/roteiros'
-      preLoaderRoute: typeof AuthenticatedAppRoteirosRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/publicacao': {
-      id: '/_authenticated/app/publicacao'
-      path: '/publicacao'
-      fullPath: '/app/publicacao'
-      preLoaderRoute: typeof AuthenticatedAppPublicacaoRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/musicas': {
-      id: '/_authenticated/app/musicas'
-      path: '/musicas'
-      fullPath: '/app/musicas'
-      preLoaderRoute: typeof AuthenticatedAppMusicasRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/montagem': {
-      id: '/_authenticated/app/montagem'
-      path: '/montagem'
-      fullPath: '/app/montagem'
-      preLoaderRoute: typeof AuthenticatedAppMontagemRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/imagens': {
-      id: '/_authenticated/app/imagens'
-      path: '/imagens'
-      fullPath: '/app/imagens'
-      preLoaderRoute: typeof AuthenticatedAppImagensRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/configuracoes': {
-      id: '/_authenticated/app/configuracoes'
-      path: '/configuracoes'
-      fullPath: '/app/configuracoes'
-      preLoaderRoute: typeof AuthenticatedAppConfiguracoesRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/audio': {
-      id: '/_authenticated/app/audio'
-      path: '/audio'
-      fullPath: '/app/audio'
-      preLoaderRoute: typeof AuthenticatedAppAudioRouteImport
+    '/_authenticated/app/agenda': {
+      id: '/_authenticated/app/agenda'
+      path: '/agenda'
+      fullPath: '/app/agenda'
+      preLoaderRoute: typeof AuthenticatedAppAgendaRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/analytics': {
@@ -450,12 +366,96 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppAnalyticsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/app/agenda': {
-      id: '/_authenticated/app/agenda'
-      path: '/agenda'
-      fullPath: '/app/agenda'
-      preLoaderRoute: typeof AuthenticatedAppAgendaRouteImport
+    '/_authenticated/app/audio': {
+      id: '/_authenticated/app/audio'
+      path: '/audio'
+      fullPath: '/app/audio'
+      preLoaderRoute: typeof AuthenticatedAppAudioRouteImport
       parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/configuracoes': {
+      id: '/_authenticated/app/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/app/configuracoes'
+      preLoaderRoute: typeof AuthenticatedAppConfiguracoesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/imagens': {
+      id: '/_authenticated/app/imagens'
+      path: '/imagens'
+      fullPath: '/app/imagens'
+      preLoaderRoute: typeof AuthenticatedAppImagensRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/montagem': {
+      id: '/_authenticated/app/montagem'
+      path: '/montagem'
+      fullPath: '/app/montagem'
+      preLoaderRoute: typeof AuthenticatedAppMontagemRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/musicas': {
+      id: '/_authenticated/app/musicas'
+      path: '/musicas'
+      fullPath: '/app/musicas'
+      preLoaderRoute: typeof AuthenticatedAppMusicasRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/publicacao': {
+      id: '/_authenticated/app/publicacao'
+      path: '/publicacao'
+      fullPath: '/app/publicacao'
+      preLoaderRoute: typeof AuthenticatedAppPublicacaoRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/roteiros': {
+      id: '/_authenticated/app/roteiros'
+      path: '/roteiros'
+      fullPath: '/app/roteiros'
+      preLoaderRoute: typeof AuthenticatedAppRoteirosRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/seo': {
+      id: '/_authenticated/app/seo'
+      path: '/seo'
+      fullPath: '/app/seo'
+      preLoaderRoute: typeof AuthenticatedAppSeoRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/api/audio/generate': {
+      id: '/api/audio/generate'
+      path: '/api/audio/generate'
+      fullPath: '/api/audio/generate'
+      preLoaderRoute: typeof ApiAudioGenerateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/images/extract-prompts': {
+      id: '/api/images/extract-prompts'
+      path: '/api/images/extract-prompts'
+      fullPath: '/api/images/extract-prompts'
+      preLoaderRoute: typeof ApiImagesExtractPromptsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/images/generate': {
+      id: '/api/images/generate'
+      path: '/api/images/generate'
+      fullPath: '/api/images/generate'
+      preLoaderRoute: typeof ApiImagesGenerateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/scripts/stream': {
+      id: '/api/scripts/stream'
+      path: '/api/scripts/stream'
+      fullPath: '/api/scripts/stream'
+      preLoaderRoute: typeof ApiScriptsStreamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/seo/generate': {
+      id: '/api/seo/generate'
+      path: '/api/seo/generate'
+      fullPath: '/api/seo/generate'
+      preLoaderRoute: typeof ApiSeoGenerateRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
