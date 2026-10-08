@@ -99,6 +99,36 @@ function ImagesPage() {
   const [audioId, setAudioId] = useState<string>(initial.audioId);
   const [secondsPerImage, setSecondsPerImage] = useState<number>(initial.secondsPerImage);
   const [measuredDur, setMeasuredDur] = useState<number | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  function toggleSelected(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  async function deleteSelected() {
+    if (selected.size === 0) return;
+    if (!confirm(`Excluir ${selected.size} imagem(ns)? Isso não pode ser desfeito.`)) return;
+    setBulkDeleting(true);
+    let ok = 0;
+    for (const id of selected) {
+      try {
+        await del({ data: { id } });
+        ok++;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    setSelected(new Set());
+    setBulkDeleting(false);
+    qc.invalidateQueries({ queryKey: ["image_assets"] });
+    toast.success(`${ok} imagem(ns) excluída(s).`);
+  }
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -583,7 +613,37 @@ function ImagesPage() {
       </div>
 
       <section className="space-y-3">
-        <h2 className="font-display text-lg text-primary">Suas imagens</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-display text-lg text-primary">Suas imagens</h2>
+          {images.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setSelected(
+                    selected.size === images.length ? new Set() : new Set(images.map((i) => i.id)),
+                  )
+                }
+              >
+                {selected.size === images.length ? "Desmarcar todas" : "Selecionar todas"}
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={selected.size === 0 || bulkDeleting}
+                onClick={deleteSelected}
+              >
+                {bulkDeleting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="mr-2 h-4 w-4" />
+                )}
+                Excluir selecionadas ({selected.size})
+              </Button>
+            </div>
+          )}
+        </div>
         {isLoading ? (
           <div className="rounded-lg border border-border bg-card/60 p-4 text-sm text-muted-foreground">
             Carregando…
@@ -597,8 +657,17 @@ function ImagesPage() {
             {images.map((img) => (
               <div
                 key={img.id}
-                className="group relative overflow-hidden rounded-lg border border-border bg-card/60"
+                onClick={() => toggleSelected(img.id)}
+                className={`group relative cursor-pointer overflow-hidden rounded-lg border bg-card/60 ${selected.has(img.id) ? "border-destructive ring-2 ring-destructive" : "border-border"}`}
               >
+                <input
+                  type="checkbox"
+                  checked={selected.has(img.id)}
+                  onChange={() => toggleSelected(img.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label="Selecionar imagem"
+                  className="absolute left-2 top-2 z-10 h-5 w-5 accent-destructive"
+                />
                 {img.signed_url ? (
                   <img
                     src={img.signed_url}
