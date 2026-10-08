@@ -689,7 +689,7 @@ function ImagesPage() {
                   <div className="flex items-center justify-between pt-1">
                     {img.signed_url ? (
                       <a
-                        href={img.signed_url}
+                        href={img.signed_url} onClick={(e) => e.stopPropagation()}
                         download={img.title}
                         className="inline-flex items-center gap-1 text-primary hover:underline"
                       >
@@ -699,7 +699,7 @@ function ImagesPage() {
                       <span />
                     )}
                     <button
-                      onClick={() => deleteMutation.mutate(img.id)}
+                      onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(img.id); }}
                       disabled={deleteMutation.isPending}
                       className="text-destructive hover:opacity-80"
                       aria-label="Excluir imagem"
