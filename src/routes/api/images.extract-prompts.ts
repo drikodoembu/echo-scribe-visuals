@@ -23,45 +23,86 @@ export const Route = createFileRoute("/api/images/extract-prompts")({
         const { scriptContent } = (await request.json()) as { scriptContent: string };
         if (!scriptContent) return new Response("scriptContent required", { status: 400 });
 
-        const googleKey = process.env.GOOGLE_API_KEY;
-        if (!googleKey) return new Response("Missing GOOGLE_API_KEY", { status: 500 });
+        const lovableKey = process.env.LOVABLE_API_KEY;
+        if (!lovableKey) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
 
         const prompt = `Leia o roteiro abaixo com atenção e divida-o em 6 a 10 cenas, NA ORDEM em que acontecem na narração.
 Para cada cena, escreva um prompt de imagem em INGLÊS que mostre EXATAMENTE o que está sendo narrado naquele trecho: os mesmos personagens (idade, aparência, roupas consistentes entre as cenas), o mesmo lugar, a ação e a emoção daquele momento.
 Não invente elementos que não estão no roteiro. Estilo: fotografia cinematográfica realista, luz natural, alta qualidade, sem texto, sem marca d'água.
+Responda em JSON no formato {"prompts": ["..."]}.
 
 Roteiro:
 ${scriptContent.slice(0, 12000)}`;
 
-        const upstream = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${googleKey}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ role: "user", parts: [{ text: prompt }] }],
-              generationConfig: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                  type: "OBJECT",
-                  properties: { prompts: { type: "ARRAY", items: { type: "STRING" } } },
-                  required: ["prompts"],
-                },
-                thinkingConfig: { thinkingBudget: 0 },
-              },
-            }),
+        const upstream = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${lovableKey}`,
+            "Lovable-API-Key": lovableKey,
+            "X-Lovable-AIG-SDK": "fetch",
           },
-        );
+          body: JSON.stringify({
+            model: "openai/gpt-6-astra",
+            input: [{ role: "user", content: prompt }],
+            stream: true,
+            store: false,
+            reasoning: { effort: "low" },
+            text: {
+              format: {
+                type: "json_schema",
+                name: "scene_prompts",
+                strict: true,
+                schema: {
+                  type: "object",
+                  properties: { prompts: { type: "array", items: { type: "string" } } },
+                  required: ["prompts"],
+                  additionalProperties: false,
+                },
+              },
+            },
+          }),
+        });
 
-        if (!upstream.ok) {
+        if (!upstream.ok || !upstream.body) {
           const errTxt = await upstream.text().catch(() => "");
+          if (upstream.status === 429)
+            return new Response("Limite de requisições atingido. Aguarde um pouco e tente de novo.", { status: 429 });
+          if (upstream.status === 402)
+            return new Response("Créditos de IA esgotados no workspace.", { status: 402 });
           return new Response(errTxt || "Gateway error", { status: upstream.status });
         }
 
-        const json = await upstream.json();
-        const content = (
-          json.candidates?.[0]?.content?.parts?.map((p: any) => p.text ?? "").join("") || ""
-        ).trim();
+        // Read the SSE stream until it ends, collecting output text deltas
+        let content = "";
+        let streamError: string | null = null;
+        const reader = upstream.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = "";
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          let idx;
+          while ((idx = buf.indexOf("\n")) >= 0) {
+            const line = buf.slice(0, idx).trim();
+            buf = buf.slice(idx + 1);
+            if (!line.startsWith("data:")) continue;
+            const payload = line.slice(5).trim();
+            if (!payload || payload === "[DONE]") continue;
+            try {
+              const evt = JSON.parse(payload);
+              if (evt.type === "response.output_text.delta" && typeof evt.delta === "string") {
+                content += evt.delta;
+              } else if (evt.type === "error" || evt.type === "response.failed") {
+                streamError =
+                  evt.error?.message || evt.response?.error?.message || "Falha na IA";
+              }
+            } catch {}
+          }
+        }
+        content = content.trim();
+        if (!content && streamError) return new Response(streamError, { status: 502 });
         
         try {
           // Clean possible markdown blocks
