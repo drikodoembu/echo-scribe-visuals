@@ -53,7 +53,7 @@ export const Route = createFileRoute("/api/images/generate")({
         const lovableKey = process.env.LOVABLE_API_KEY;
         if (!lovableKey) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
 
-        const fullPrompt = `${prompt}\n\nAspect ratio: ${aspect}. Cinematic, reverent Catholic aesthetic, dramatic light, high detail, no text, no watermark.`;
+        const fullPrompt = `${prompt}\n\nAspect ratio: ${aspect}. Realistic cinematic everyday-life photography, natural light, high detail, no text, no watermark.`;
 
         const upstream = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
           method: "POST",

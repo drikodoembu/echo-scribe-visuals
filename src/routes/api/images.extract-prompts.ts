@@ -23,32 +23,35 @@ export const Route = createFileRoute("/api/images/extract-prompts")({
         const { scriptContent } = (await request.json()) as { scriptContent: string };
         if (!scriptContent) return new Response("scriptContent required", { status: 400 });
 
-        const lovableKey = process.env.LOVABLE_API_KEY;
-        if (!lovableKey) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
+        const googleKey = process.env.GOOGLE_API_KEY;
+        if (!googleKey) return new Response("Missing GOOGLE_API_KEY", { status: 500 });
 
-        const prompt = `Analise o roteiro de história do cotidiano abaixo e sugira de 4 a 8 descrições de imagens cinematográficas (prompts) que ilustrem as cenas da narrativa.
-        As descrições devem ser em INGLÊS, focadas em iluminação cinematográfica, cenas realistas do dia a dia e alta qualidade, sem textos ou marcas d'água.
-        
-        IMPORTANTE: Responda APENAS um objeto JSON no formato: {"prompts": ["prompt 1", "prompt 2", ...]}
-        Não inclua explicações, comentários, blocos de código Markdown (\`\`\`json) ou outros campos.
-        
-        Roteiro:
-        ${scriptContent}`;
+        const prompt = `Leia o roteiro abaixo com atenção e divida-o em 6 a 10 cenas, NA ORDEM em que acontecem na narração.
+Para cada cena, escreva um prompt de imagem em INGLÊS que mostre EXATAMENTE o que está sendo narrado naquele trecho: os mesmos personagens (idade, aparência, roupas consistentes entre as cenas), o mesmo lugar, a ação e a emoção daquele momento.
+Não invente elementos que não estão no roteiro. Estilo: fotografia cinematográfica realista, luz natural, alta qualidade, sem texto, sem marca d'água.
 
-        const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${lovableKey}`,
+Roteiro:
+${scriptContent.slice(0, 12000)}`;
+
+        const upstream = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${googleKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ role: "user", parts: [{ text: prompt }] }],
+              generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                  type: "OBJECT",
+                  properties: { prompts: { type: "ARRAY", items: { type: "STRING" } } },
+                  required: ["prompts"],
+                },
+                thinkingConfig: { thinkingBudget: 0 },
+              },
+            }),
           },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
-            messages: [{ role: "user", content: prompt }],
-            response_format: { type: "json_object" },
-            temperature: 0.1,
-            max_tokens: 2000,
-          }),
-        });
+        );
 
         if (!upstream.ok) {
           const errTxt = await upstream.text().catch(() => "");
@@ -56,8 +59,9 @@ export const Route = createFileRoute("/api/images/extract-prompts")({
         }
 
         const json = await upstream.json();
-        const content = (json.choices?.[0]?.message?.content || "").trim();
-        console.log("AI Raw Content:", content);
+        const content = (
+          json.candidates?.[0]?.content?.parts?.map((p: any) => p.text ?? "").join("") || ""
+        ).trim();
         
         try {
           // Clean possible markdown blocks
