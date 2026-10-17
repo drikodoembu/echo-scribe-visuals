@@ -35,6 +35,7 @@ import {
   saveScript,
 } from "@/lib/scripts.functions";
 import { SCRIPT_SYSTEM_PROMPT, buildScriptPrompt, parseScript } from "@/lib/scripts.prompt";
+import { scriptSaveFields } from "@/lib/script-save";
 
 export const Route = createFileRoute("/_authenticated/app/roteiros")({
   head: () => pageHead("Roteiros", "Crie e organize roteiros de histórias do cotidiano."),
@@ -50,7 +51,7 @@ function RoteirosPage() {
   const save = useServerFn(saveScript);
   const del = useServerFn(deleteScript);
 
-  const { data: scripts = [], isLoading } = useQuery({
+  const { data: scripts = [], isLoading, isSuccess, error: listError } = useQuery({
     queryKey: ["scripts"],
     queryFn: () => list(),
   });
@@ -92,6 +93,12 @@ function RoteirosPage() {
   const [showPreview, setShowPreview] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
+  useEffect(() => {
+    if (isSuccess && selectedId && !scripts.some((script) => script.id === selectedId)) {
+      setSelectedId(null);
+    }
+  }, [isSuccess, scripts, selectedId]);
+
   // Salva rascunho automaticamente
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -118,6 +125,7 @@ function RoteirosPage() {
 
   function newScript() {
     setSelectedId(null);
+    localStorage.removeItem("catolicoteca:active_script_id");
     setTitle("");
     setTopic("");
     setSaint("");
@@ -218,14 +226,12 @@ function RoteirosPage() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (!title.trim() || !topic.trim() || !content.trim()) {
-        throw new Error("Preencha título, tema e conteúdo antes de salvar.");
-      }
+      const fields = scriptSaveFields(title, topic, content);
       return save({
         data: {
           id: selectedId,
-          title: title.trim(),
-          topic: topic.trim(),
+          title: fields.title,
+          topic: fields.topic,
           saint: saint.trim() || null,
           format,
           duration_seconds: duration,
@@ -236,6 +242,9 @@ function RoteirosPage() {
     },
     onSuccess: (saved) => {
       toast.success("Roteiro salvo.");
+      setTitle(saved.title);
+      setTopic(saved.topic);
+      qc.setQueryData<ScriptRow[]>(["scripts"], (rows = []) => [saved, ...rows.filter((row) => row.id !== saved.id)]);
       if (saved && typeof saved === "object" && "id" in saved) {
         const sid = (saved as { id: string }).id;
         setSelectedId(sid);
@@ -479,7 +488,9 @@ function RoteirosPage() {
               </Button>
             </div>
             <div className="space-y-1">
-              {isLoading ? (
+              {listError ? (
+                <div role="alert" className="p-3 text-sm text-destructive">Não foi possível carregar seus roteiros. <Button variant="link" onClick={() => qc.invalidateQueries({ queryKey: ["scripts"] })}>Tentar novamente</Button></div>
+              ) : isLoading ? (
                 <div className="p-3 text-sm text-muted-foreground">Carregando…</div>
               ) : scripts.length === 0 ? (
                 <div className="p-3 text-sm text-muted-foreground">
