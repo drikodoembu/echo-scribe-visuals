@@ -1,29 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
+import { generateImage, GatewayError } from "@lovable.dev/ai-gateway";
+import { imageStyle } from "@/lib/image-plan";
 import type { Database } from "@/integrations/supabase/types";
 
 type Body = {
   prompt?: string;
+  style?: string;
   title?: string;
   script_id?: string | null;
   aspect?: "9:16" | "16:9" | "1:1";
 };
-
-function pickImage(json: any): string | null {
-  // Support standard OpenAI-like format
-  if (json?.data?.[0]?.url) return json.data[0].url;
-  if (json?.data?.[0]?.b64_json) return `data:image/png;base64,${json.data[0].b64_json}`;
-  
-  // Support Gemini-specific format if it differs
-  if (json?.images?.[0]?.url) return json.images[0].url;
-  
-  // Last resort: deep search for anything that looks like a URL or base64
-  const choices = json?.choices?.[0];
-  const msg = choices?.message;
-  const img = msg?.content?.match(/https?:\/\/[^\s"]+/)?.[0] || msg?.images?.[0]?.image_url?.url;
-  
-  return img || null;
-}
 
 export const Route = createFileRoute("/api/images/generate")({
   server: {
@@ -50,40 +37,31 @@ export const Route = createFileRoute("/api/images/generate")({
         if (prompt.length > 2000) return new Response("prompt too long", { status: 400 });
 
         const aspect = body.aspect ?? "9:16";
-        const lovableKey = process.env.LOVABLE_API_KEY;
-        if (!lovableKey) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
-
-        const fullPrompt = `${prompt}\n\nAspect ratio: ${aspect}. Realistic cinematic everyday-life photography, natural light, high detail, no text, no watermark.`;
-
-        const upstream = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${lovableKey}`,
-          },
-          body: JSON.stringify({
+        if (!["9:16", "16:9", "1:1"].includes(aspect)) return new Response("Formato inválido", { status: 400 });
+        const fullPrompt = `${prompt}\n\nStyle: ${imageStyle(body.style).prompt}. Aspect ratio: ${aspect}. No text, no watermark.`;
+        let dataUrl: string;
+        try {
+          const result = await generateImage({
             model: "google/gemini-3-pro-image",
-            prompt: fullPrompt,
-            n: 1,
-            size: aspect === "9:16" ? "1024x1792" : aspect === "16:9" ? "1792x1024" : "1024x1024",
-            response_format: "url"
-          }),
-        });
-
-        if (!upstream.ok) {
-          const errTxt = await upstream.text().catch(() => "");
-          return new Response(errTxt || "Gateway error", { status: upstream.status });
+            contents: [{ role: "user", parts: [{ text: fullPrompt }] }],
+            generationConfig: { responseModalities: ["TEXT", "IMAGE"], imageConfig: { aspectRatio: aspect } },
+          }, { signal: request.signal });
+          const image = result.data[0];
+          const url = image?.b64_json ? `data:image/png;base64,${image.b64_json}` : image?.url;
+          if (!url) return new Response("Nenhuma imagem retornada pelo modelo", { status: 502 });
+          dataUrl = url;
+        } catch (error) {
+          console.error("Image generation failed", error);
+          const status = error instanceof GatewayError ? error.httpStatus : undefined;
+          return new Response(status === 402 ? "Créditos de IA esgotados." : status === 429 ? "Limite de requisições atingido." : "Falha na geração da imagem. Verifique o resultado antes de tentar novamente.", { status: status === 402 || status === 429 ? status : 502 });
         }
-
-        const json = await upstream.json();
-        const dataUrl = pickImage(json);
-        if (!dataUrl) return new Response("Nenhuma imagem retornada pelo modelo", { status: 502 });
 
         let bytes: Uint8Array;
         let mime = "image/png";
         if (dataUrl.startsWith("data:")) {
           const [head, b64] = dataUrl.split(",");
           mime = head.slice(5).split(";")[0] || "image/png";
+          if (!b64) return new Response("Imagem inválida", { status: 502 });
           const bin = atob(b64);
           bytes = new Uint8Array(bin.length);
           for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
