@@ -24,7 +24,7 @@ import {
 } from "@/lib/images.functions";
 import { listScripts } from "@/lib/scripts.functions";
 import { listAudioAssets } from "@/lib/audio.functions";
-import { parseScript } from "@/lib/scripts.prompt";
+import { IMAGE_STYLES, imageStyle, sceneCount, sceneBatches } from "@/lib/image-plan";
 
 export const Route = createFileRoute("/_authenticated/app/imagens")({
   head: () => pageHead("Imagens", "Crie cenas e organize as imagens dos seus roteiros."),
@@ -32,27 +32,6 @@ export const Route = createFileRoute("/_authenticated/app/imagens")({
 });
 
 const ACCEPT = "image/png,image/jpeg,image/webp,image/avif,image/gif";
-
-const VARIATIONS = [
-  "wide establishing shot, soft rim light",
-  "close-up detail, shallow depth of field",
-  "low angle, dramatic chiaroscuro light",
-  "overhead composition, calm symmetry",
-];
-
-function fitPromptsToCount(prompts: string[], count: number): string[] {
-  if (prompts.length === 0 || count <= 0) return [];
-  if (prompts.length >= count) return prompts.slice(0, count);
-  const out = [...prompts];
-  let i = 0;
-  while (out.length < count) {
-    const base = prompts[i % prompts.length];
-    const variation = VARIATIONS[Math.floor(i / prompts.length) % VARIATIONS.length];
-    out.push(`${base}, ${variation}`);
-    i++;
-  }
-  return out;
-}
 
 function ImagesPage() {
   const qc = useQueryClient();
@@ -92,6 +71,8 @@ function ImagesPage() {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const [genScriptId, setGenScriptId] = useState<string>(initial.genScriptId);
+  const [style, setStyle] = useState<string>(imageStyle(initial.style).id);
+  const [promptProgress, setPromptProgress] = useState({ done: 0, total: 0 });
   const [scenePrompts, setScenePrompts] = useState<string[]>([]);
   const [isPromptGenerating, setIsPromptGenerating] = useState(false);
   const [freePrompt, setFreePrompt] = useState("");
@@ -134,9 +115,9 @@ function ImagesPage() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ genScriptId, audioId, aspect, secondsPerImage, scriptId }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ genScriptId, audioId, aspect, secondsPerImage, scriptId, style }));
     if (genScriptId) localStorage.setItem("catolicoteca:active_script_id", genScriptId);
-  }, [genScriptId, audioId, aspect, secondsPerImage, scriptId]);
+  }, [genScriptId, audioId, aspect, secondsPerImage, scriptId, style]);
 
   // Sync with global active script
   useEffect(() => {
@@ -170,61 +151,51 @@ function ImagesPage() {
   }, [selectedAudio?.signed_url]);
 
   const narrationDur = measuredDur ?? selectedAudio?.duration_seconds ?? null;
-  const targetCount = narrationDur
-    ? Math.min(20, Math.max(2, Math.ceil(narrationDur / Math.max(2, secondsPerImage))))
-    : scenePrompts.length;
-  const plannedPrompts = useMemo(
-    () => fitPromptsToCount(scenePrompts, targetCount || scenePrompts.length),
-    [scenePrompts, targetCount],
-  );
+  const fallbackDuration = (scripts.find((script) => script.id === genScriptId)?.content.trim().split(/\s+/).length ?? 0) / 150 * 60;
+  const targetCount = sceneCount(narrationDur ?? fallbackDuration, secondsPerImage);
+  const plannedPrompts = scenePrompts;
+
+  useEffect(() => {
+    if (!genScriptId || audioId) return;
+    const match = audios.find((audio) => audio.script_id === genScriptId);
+    if (match) setAudioId(match.id);
+  }, [audios, genScriptId, audioId]);
 
   function pickGenScript(id: string) {
     setGenScriptId(id);
     const match = audios.find((a) => a.script_id === id);
-    if (match) setAudioId(match.id);
+    setAudioId(match?.id ?? "");
     // Reset prompts when script changes
     setScenePrompts([]);
   }
 
   async function generatePromptsFromScript() {
-    if (!genScriptId) return;
+    if (!genScriptId || !targetCount) return;
     setIsPromptGenerating(true);
-    setScenePrompts([]); // Clear old ones immediately
-    toast.info("Iniciando análise do roteiro para sugestão de imagens...");
+    setPromptProgress({ done: 0, total: targetCount });
+    const collected: string[] = [];
     try {
-      const s = scripts.find((x) => x.id === genScriptId);
-      if (s) {
-        const { data: sess } = await supabase.auth.getSession();
-        const token = sess.session?.access_token;
-        if (!token) throw new Error("Sessão expirada.");
-
-        // We call a new endpoint to extract/generate prompts from the clean script
+      const script = scripts.find((item) => item.id === genScriptId);
+      if (!script) throw new Error("Selecione um roteiro salvo.");
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      if (!token) throw new Error("Sessão expirada.");
+      for (const batch of sceneBatches(targetCount)) {
         const res = await fetch("/api/images/extract-prompts", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ scriptContent: s.content }),
+          body: JSON.stringify({ scriptContent: script.content, targetCount, ...batch, style, continuity: collected.slice(-2) }),
         });
-
-        if (!res.ok) {
-          const errText = await res.text().catch(() => "Erro desconhecido");
-          throw new Error(`Falha ao gerar prompts via IA: ${errText}`);
-        }
-        
+        if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
-        console.log("Prompts recebidos da API:", data);
-        
-        if (data && Array.isArray(data.prompts) && data.prompts.length > 0) {
-          setScenePrompts(data.prompts);
-          toast.success(`${data.prompts.length} prompts de cena gerados com sucesso!`);
-        } else {
-          console.warn("API retornou sucesso mas sem prompts:", data);
-          toast.error("A IA não conseguiu extrair prompts válidos do roteiro. Tente outro roteiro ou gere manualmente.");
-          setScenePrompts([]);
-        }
+        if (!Array.isArray(data.prompts) || data.prompts.length !== batch.count) throw new Error("A resposta não contém todas as cenas solicitadas.");
+        collected.push(...data.prompts);
+        setScenePrompts([...collected]);
+        setPromptProgress({ done: collected.length, total: targetCount });
       }
-    } catch (err) {
-      console.error("Erro completo ao gerar prompts:", err);
-      toast.error("Erro ao gerar prompts: " + (err as Error).message);
+      toast.success(`${collected.length} prompts de cena gerados.`);
+    } catch (error) {
+      toast.error(`${(error as Error).message}${collected.length ? ` ${collected.length} prompts preservados.` : ""}`);
     } finally {
       setIsPromptGenerating(false);
     }
@@ -237,7 +208,7 @@ function ImagesPage() {
     const res = await fetch("/api/images/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ prompt, title, aspect, script_id: genScriptId || null }),
+      body: JSON.stringify({ prompt, title, aspect, style, script_id: genScriptId || null }),
     });
     if (!res.ok) {
       const msg = await res.text().catch(() => "");
@@ -267,7 +238,7 @@ function ImagesPage() {
         console.error(`Erro na cena ${i + 1}:`, err);
         toast.error(`Cena ${i + 1}: ${(err as Error).message}`);
         // If it's a critical error (like auth), we might want to stop
-        if ((err as Error).message.includes("Unauthorized")) break;
+        break; // Never automatically replay or continue after an unknown or credit failure.
       } finally {
         setGenProgress((p) => ({ ...p, done: p.done + 1 }));
       }
@@ -373,7 +344,7 @@ function ImagesPage() {
 
         <div className="space-y-2">
           <Label>Roteiro</Label>
-          <Select value={genScriptId} onValueChange={pickGenScript}>
+          <Select value={genScriptId} onValueChange={pickGenScript} disabled={isPromptGenerating || genBusy}>
             <SelectTrigger>
               <SelectValue placeholder="Escolher roteiro…" />
             </SelectTrigger>
@@ -404,10 +375,18 @@ function ImagesPage() {
           </Select>
         </div>
 
+        <div className="space-y-2 md:col-span-2">
+          <Label htmlFor="image-style">Estilo visual</Label>
+          <Select value={style} onValueChange={(value) => { setStyle(value); setScenePrompts([]); }} disabled={isPromptGenerating || genBusy}>
+            <SelectTrigger id="image-style"><SelectValue /></SelectTrigger>
+            <SelectContent>{IMAGE_STYLES.map((item) => <SelectItem key={item.id} value={item.id}>{item.label}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+
         <div className="grid gap-4 md:col-span-2 md:grid-cols-2">
           <div className="space-y-2">
             <Label>Narração (define a quantidade de imagens)</Label>
-            <Select value={audioId} onValueChange={setAudioId}>
+            <Select value={audioId} onValueChange={(id) => { setAudioId(id); setScenePrompts([]); }} disabled={isPromptGenerating || genBusy}>
               <SelectTrigger>
                 <SelectValue placeholder="Escolher narração…" />
               </SelectTrigger>
@@ -433,8 +412,10 @@ function ImagesPage() {
               min={2}
               max={30}
               value={secondsPerImage}
-              onChange={(e) => setSecondsPerImage(Number(e.target.value) || 6)}
+              disabled={isPromptGenerating || genBusy}
+              onChange={(e) => { setSecondsPerImage(Number(e.target.value) || 6); setScenePrompts([]); }}
             />
+            {!narrationDur && targetCount > 0 && <p className="text-xs text-muted-foreground">Estimativa pelo roteiro: {targetCount} imagens.</p>}
             {narrationDur && (
               <p className="text-xs text-muted-foreground">
                 Narração de {narrationDur.toFixed(1)}s → {targetCount} imagens (~
@@ -449,12 +430,12 @@ function ImagesPage() {
             variant="outline"
             className="w-full border-gold/30 text-gold hover:bg-gold/10"
             onClick={generatePromptsFromScript}
-            disabled={!genScriptId || isPromptGenerating}
+            disabled={!genScriptId || !targetCount || isPromptGenerating || genBusy}
           >
             {isPromptGenerating ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Gerando prompts...
+                Gerando prompts {promptProgress.done}/{promptProgress.total}...
               </>
             ) : (
               <>
@@ -491,7 +472,7 @@ function ImagesPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      disabled={genBusy}
+                      disabled={genBusy || isPromptGenerating}
                       onClick={() => generateBatch([p])}
                     >
                       Gerar
@@ -531,7 +512,7 @@ function ImagesPage() {
           <div className="flex flex-wrap gap-2">
             <Button
               onClick={() => generateBatch(plannedPrompts)}
-              disabled={genBusy || plannedPrompts.length === 0}
+              disabled={genBusy || isPromptGenerating || plannedPrompts.length === 0}
               className="bg-primary text-primary-foreground"
             >
               {genBusy ? (
@@ -544,7 +525,7 @@ function ImagesPage() {
             <Button
               variant="outline"
               onClick={() => generateBatch([freePrompt.trim()])}
-              disabled={genBusy || !freePrompt.trim()}
+              disabled={genBusy || isPromptGenerating || !freePrompt.trim()}
             >
               Gerar prompt avulso
             </Button>

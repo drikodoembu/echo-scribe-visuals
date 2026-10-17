@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { sceneCount, sceneBatches, imageStyle } from "./image-plan";
 import { scriptSaveFields } from "./script-save";
 
