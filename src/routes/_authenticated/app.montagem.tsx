@@ -241,24 +241,24 @@ function MontagemPage() {
         const perFrames = Math.max(fps, Math.round(perSceneSeconds * fps));
 
         const zoomIn = i % 2 === 0;
+        // Progresso 0→1 alcançando 100% no último quadro.
+        const den = Math.max(1, perFrames - 1);
         const zExpr = zoomIn
-          ? `1+0.25*on/${perFrames}`
-          : `1.25-0.25*on/${perFrames}`;
-        
-        // Efeito Ken Burns aprimorado: movimento linear suave
-        // Garantimos que a imagem preencha a tela e se mova suavemente
+          ? `1+0.25*on/${den}`
+          : `1.25-0.25*on/${den}`;
+
+        // Zoom-in: deslocamento direcional (amplitude cresce com o zoom).
+        // Zoom-out: centralizado, sem deslocamento (evita parar no fim da cena).
         const dir = i % 4;
         let xExpr = `(iw-iw/zoom)/2`;
         let yExpr = `(ih-ih/zoom)/2`;
-        
-        if (dir === 0) { // Esquerda para Direita
-          xExpr = `(iw-iw/zoom)*(on/${perFrames})`;
-        } else if (dir === 1) { // Direita para Esquerda
-          xExpr = `(iw-iw/zoom)*(1-on/${perFrames})`;
-        } else if (dir === 2) { // Cima para Baixo
-          yExpr = `(ih-ih/zoom)*(on/${perFrames})`;
-        } else { // Baixo para Cima
-          yExpr = `(ih-ih/zoom)*(1-on/${perFrames})`;
+
+        if (zoomIn) {
+          if (dir === 0) { // Esquerda para Direita
+            xExpr = `(iw-iw/zoom)*(on/${den})`;
+          } else { // Cima para Baixo (dir === 2)
+            yExpr = `(ih-ih/zoom)*(on/${den})`;
+          }
         }
 
         const sw = Math.round(w * 1.5);
@@ -266,12 +266,10 @@ function MontagemPage() {
         const vf =
           `scale=${sw}:${sh}:force_original_aspect_ratio=increase,crop=${sw}:${sh},` +
           `zoompan=z='${zExpr}':x='${xExpr}':y='${yExpr}':d=${perFrames}:s=${w}x${h}:fps=${fps},` +
-          `trim=duration=${perSceneSeconds.toFixed(3)},setpts=PTS-STARTPTS,setsar=1,format=yuv420p`;
+          `setpts=PTS-STARTPTS,setsar=1,format=yuv420p`;
 
         const code = await ffmpeg.exec([
           "-y",
-          "-loop", "1",
-          "-framerate", String(fps),
           "-i", `img${i}.jpg`,
           "-vf", vf,
           "-an",
