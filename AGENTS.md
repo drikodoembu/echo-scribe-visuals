@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep app navigation available at every viewport width: desktop sidebar and a compact scrollable navigation strip share the same destinations.
+- Use the browser-safe pageHead helper for leaf-page metadata so each page has its own title and social description.
