@@ -34,7 +34,6 @@ ${scriptContent}`;
           const stream = await streamResponse({
             model: "openai/gpt-6-astra",
             input: [{ role: "user", content: prompt }],
-            store: false,
             reasoning: { effort: "low" },
             text: { format: { type: "json_schema", name: "scene_prompts", strict: true, schema: {
               type: "object", properties: { prompts: { type: "array", items: { type: "string" }, minItems: count, maxItems: count } }, required: ["prompts"], additionalProperties: false,
