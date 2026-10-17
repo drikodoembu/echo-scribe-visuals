@@ -20,6 +20,8 @@ export const Route = createFileRoute("/auth")({
       { name: "robots", content: "noindex, nofollow" },
       { property: "og:title", content: "Entrar · Catolicoteca Auto Creator" },
       { property: "og:description", content: "Acesse seu estúdio católico de conteúdo." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { property: "og:url", content: "/auth" },
     ],
     links: [{ rel: "canonical", href: "/auth" }],

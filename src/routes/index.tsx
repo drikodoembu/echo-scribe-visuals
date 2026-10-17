@@ -15,6 +15,7 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Da ideia ao Shorts publicado — roteiro, áudio, imagem, montagem e publicação no YouTube." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "/" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Auto Creator" },
       { name: "twitter:description", content: "Estúdio completo de histórias do cotidiano: roteiro, mídia e publicação no YouTube com IA." },
     ],

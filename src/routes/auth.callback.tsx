@@ -1,9 +1,11 @@
+import { pageHead } from "@/lib/page-head";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/auth/callback")({
+  head: () => pageHead("Concluir acesso", "Conclua seu acesso ao estúdio Auto Creator."),
   component: AuthCallback,
 });
 

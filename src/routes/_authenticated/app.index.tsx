@@ -1,3 +1,4 @@
+import { pageHead } from "@/lib/page-head";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   BookOpen,
@@ -12,6 +13,7 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/")({
+  head: () => pageHead("Painel", "Seu estúdio de roteiros, narração, imagens e montagem de vídeos."),
   component: Dashboard,
 });
 

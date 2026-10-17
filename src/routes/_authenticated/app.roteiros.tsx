@@ -1,3 +1,4 @@
+import { pageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -36,6 +37,7 @@ import {
 import { SCRIPT_SYSTEM_PROMPT, buildScriptPrompt, parseScript } from "@/lib/scripts.prompt";
 
 export const Route = createFileRoute("/_authenticated/app/roteiros")({
+  head: () => pageHead("Roteiros", "Crie e organize roteiros de histórias do cotidiano."),
   component: RoteirosPage,
 });
 

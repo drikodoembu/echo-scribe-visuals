@@ -1,3 +1,4 @@
+import { pageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -15,6 +16,7 @@ import {
 } from "@/lib/music.functions";
 
 export const Route = createFileRoute("/_authenticated/app/musicas")({
+  head: () => pageHead("Músicas", "Organize as trilhas musicais dos seus vídeos."),
   component: MusicPage,
 });
 
