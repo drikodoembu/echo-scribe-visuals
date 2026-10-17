@@ -1,3 +1,4 @@
+import { pageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -22,12 +23,7 @@ import { deleteVideoSeo, listVideoSeo, saveVideoSeo } from "@/lib/seo.functions"
 
 export const Route = createFileRoute("/_authenticated/app/seo")({
   component: SeoPage,
-  head: () => ({
-    meta: [
-      { title: "SEO do vídeo — Catolicoteca Auto Creator" },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
-  }),
+  head: () => pageHead("SEO do vídeo", "Prepare títulos, descrições e palavras-chave para seus vídeos."),
 });
 
 type Chapter = { time: string; label: string };

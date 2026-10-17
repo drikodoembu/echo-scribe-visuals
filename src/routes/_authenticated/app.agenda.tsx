@@ -1,6 +1,8 @@
+import { pageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/app/agenda")({
+  head: () => pageHead("Agenda", "Área de agenda de publicações do Auto Creator."),
   component: Placeholder,
 });
 

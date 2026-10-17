@@ -1,6 +1,8 @@
+import { pageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/app/configuracoes")({
+  head: () => pageHead("Configurações", "Preferências do seu estúdio Auto Creator."),
   component: Placeholder,
 });
 

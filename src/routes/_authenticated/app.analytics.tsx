@@ -1,6 +1,8 @@
+import { pageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/app/analytics")({
+  head: () => pageHead("Analytics", "Área de análise dos vídeos do Auto Creator."),
   component: Placeholder,
 });
 

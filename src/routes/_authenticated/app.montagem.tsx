@@ -1,3 +1,4 @@
+import { pageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -20,6 +21,7 @@ import { listImageAssets } from "@/lib/images.functions";
 import { listMusicTracks } from "@/lib/music.functions";
 
 export const Route = createFileRoute("/_authenticated/app/montagem")({
+  head: () => pageHead("Montagem", "Monte e exporte seus vídeos com narração, imagens e música."),
   component: MontagemPage,
 });
 

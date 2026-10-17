@@ -1,3 +1,4 @@
+import { pageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -25,6 +26,7 @@ import { listScripts } from "@/lib/scripts.functions";
 import { parseScript } from "@/lib/scripts.prompt";
 
 export const Route = createFileRoute("/_authenticated/app/audio")({
+  head: () => pageHead("Áudio", "Gere narrações e organize os áudios dos seus projetos."),
   component: AudioPage,
 });
 
