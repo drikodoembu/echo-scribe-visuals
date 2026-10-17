@@ -5,22 +5,33 @@ import { z } from "zod";
 export const listImageAssets = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
-      .from("image_assets")
-      .select("id, title, storage_path, mime_type, size_bytes, width, height, script_id, created_at")
-      .order("created_at", { ascending: false })
-      .limit(200);
-    if (error) throw new Error(error.message);
+    async function page(offset: number) {
+      const { data, error } = await context.supabase
+        .from("image_assets")
+        .select("id, title, storage_path, mime_type, size_bytes, width, height, script_id, created_at")
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
+        .range(offset, offset + 199);
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    }
+    const data = await page(0);
+    let lastPageSize = data.length;
+    while (lastPageSize === 200) {
+      const next = await page(data.length);
+      lastPageSize = next.length;
+      data.push(...next);
+    }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const results = await Promise.all(
-      (data ?? []).map(async (row) => {
-        const { data: signed } = await supabaseAdmin.storage
-          .from("images")
-          .createSignedUrl(row.storage_path, 60 * 60 * 24);
+    const results = [];
+    for (let offset = 0; offset < data.length; offset += 6) {
+      const batch = await Promise.all(data.slice(offset, offset + 6).map(async (row) => {
+        const { data: signed } = await supabaseAdmin.storage.from("images").createSignedUrl(row.storage_path, 60 * 60 * 24);
         return { ...row, signed_url: signed?.signedUrl ?? null };
-      }),
-    );
+      }));
+      results.push(...batch);
+    }
     return results;
   });
 

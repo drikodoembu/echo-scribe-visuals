@@ -41,10 +41,11 @@ export const saveScript = createServerFn({ method: "POST" })
       status: "draft",
     };
     const query = data.id
-      ? context.supabase.from("scripts").update(row).eq("id", data.id).select().single()
+      ? context.supabase.from("scripts").update(row).eq("id", data.id).eq("user_id", context.userId).select().maybeSingle()
       : context.supabase.from("scripts").insert(row).select().single();
     const { data: saved, error } = await query;
     if (error) throw new Error(error.message);
+    if (!saved) throw new Error("Este roteiro não está mais disponível. Clique em Novo para salvar um novo roteiro.");
     return saved;
   });
 

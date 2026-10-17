@@ -11,3 +11,7 @@
 
 - Keep app navigation available at every viewport width: desktop sidebar and a compact scrollable navigation strip share the same destinations.
 - Use the browser-safe pageHead helper for leaf-page metadata so each page has its own title and social description.
+
+- Compute scene totals with the shared image-plan module and request sequential bounded batches; this preserves narration-relative counts without duplicating prompts.
+- Normalize pasted-script save fields with script-save; generation settings must not prevent saving authored content.
+- Use the AI Gateway SDK and generated model contracts for image and scene-prompt calls; preserve existing model choices.
